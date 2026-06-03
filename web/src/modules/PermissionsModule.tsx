@@ -101,7 +101,7 @@ export function PermissionsModule() {
           </div>
         }
       >
-        <div className="grid h-full grid-cols-1 gap-px overflow-auto bg-border lg:grid-cols-2">
+        <div className="grid grid-cols-1 divide-y divide-border lg:grid-cols-2 lg:divide-x lg:divide-y-0">
           <RuleColumn
             col="allow"
             rules={draft.allow ?? []}
@@ -155,7 +155,7 @@ function RuleColumn({
   const groups = useMemo(() => groupRulesByTool(filtered), [filtered]);
 
   return (
-    <section className="flex min-h-0 flex-col bg-bg">
+    <section className="flex min-w-0 flex-col">
       <header className="sticky top-0 z-10 flex items-center justify-between border-b border-border bg-bg/95 px-6 py-3 backdrop-blur">
         <div className="flex items-center gap-2">
           {isAllow ? <ShieldCheck className="h-4 w-4 text-success" /> : <ShieldX className="h-4 w-4 text-danger" />}
@@ -195,15 +195,19 @@ function RuleChip({ rule, tone, onRemove }: { rule: string; tone: Col; onRemove:
   return (
     <span
       className={cn(
-        'group inline-flex h-7 animate-chip-in items-center gap-1.5 rounded-sm border px-2 font-mono text-[13px]',
+        'group inline-flex min-h-[28px] max-w-full animate-chip-in items-center gap-1.5 rounded-sm border px-2 py-0.5 font-mono text-[13px]',
         tone === 'allow'
           ? 'border-success/20 bg-success-soft text-success'
           : 'border-danger/20 bg-danger-soft text-danger',
         isBroadRule(rule) && 'ring-1 ring-warning/40',
       )}
     >
-      {rule}
-      <button onClick={onRemove} className="rounded-full p-0.5 opacity-50 transition-opacity hover:bg-black/5 group-hover:opacity-100" aria-label={`Remove ${rule}`}>
+      <span className="break-all">{rule}</span>
+      <button
+        onClick={onRemove}
+        className="shrink-0 rounded-full p-0.5 opacity-50 transition-opacity hover:bg-black/5 group-hover:opacity-100"
+        aria-label={`Remove ${rule}`}
+      >
         <X className="h-3 w-3" />
       </button>
     </span>

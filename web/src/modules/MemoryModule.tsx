@@ -62,32 +62,39 @@ export function MemoryModule() {
       saving={write.isPending}
       onSave={save}
       onDiscard={() => setText(baseline)}
-      headerExtra={
-        docs.length > 1 && (
-          <div className="flex flex-wrap gap-1">
+    >
+      <div className="flex h-full">
+        {docs.length > 1 && (
+          <aside className="w-56 shrink-0 overflow-y-auto border-r border-border p-2">
+            <div className="px-1.5 pb-1.5 text-[11px] font-semibold uppercase tracking-wide text-ink-subtle">
+              Documents
+            </div>
             {docs.map((d) => (
               <button
                 key={d.relPath}
                 onClick={() => setSelected(d.relPath)}
-                className={cn(
-                  'rounded-sm px-2 py-1 font-mono text-[11px] transition-colors',
-                  d.relPath === relPath ? 'bg-clay-soft text-clay' : 'bg-bg-subtle text-ink-muted hover:text-ink',
-                )}
                 title={d.relPath}
+                className={cn(
+                  'block w-full truncate rounded-sm px-2 py-1.5 text-left font-mono text-[12px] transition-colors',
+                  d.relPath === relPath
+                    ? 'bg-clay-soft text-clay'
+                    : 'text-ink-muted hover:bg-surface-2 hover:text-ink',
+                )}
               >
                 {d.relPath.split('/').pop()}
               </button>
             ))}
-          </div>
-        )
-      }
-    >
-      <div className="mx-auto h-full max-w-3xl px-6 py-5">
-        {doc.isLoading ? (
-          <div className="flex justify-center py-10"><Spinner /></div>
-        ) : (
-          <CodeMirror value={text} language="markdown" onChange={setText} minHeight="60vh" />
+          </aside>
         )}
+        <div className="min-w-0 flex-1 overflow-auto px-6 py-5">
+          {doc.isLoading ? (
+            <div className="flex justify-center py-10">
+              <Spinner />
+            </div>
+          ) : (
+            <CodeMirror value={text} language="markdown" onChange={setText} minHeight="60vh" />
+          )}
+        </div>
       </div>
     </EditorFrame>
   );

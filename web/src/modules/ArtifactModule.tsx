@@ -214,7 +214,8 @@ function ArtifactEditor({ type, name, create }: { type: ArtifactType; name?: str
               {type !== 'commands' && (
                 <Field label="Description" hint="How Claude decides when to use this.">
                   <Textarea
-                    rows={3}
+                    rows={6}
+                    className="min-h-[8rem] resize-y"
                     value={(fm.description as string) ?? ''}
                     onChange={(e) => setField('description', e.target.value)}
                     placeholder="What it does and when to use it…"
