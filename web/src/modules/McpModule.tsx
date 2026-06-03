@@ -1,14 +1,17 @@
 import { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { toast } from 'sonner';
-import { Plus, Trash2, Plug, Pencil, Eye, EyeOff } from 'lucide-react';
-import type { McpServer } from '@ccm/shared';
-import { useMcp, useUpsertMcp, useDeleteMcp } from '../lib/queries';
+import { Plus, Trash2, Plug, Pencil, Eye, EyeOff, Sparkles, Search, ArrowDownToLine } from 'lucide-react';
+import type { McpServer, McpRegistryEntry, McpInstall } from '@ccm/shared';
+import { useMcp, useUpsertMcp, useDeleteMcp, useMcpRegistrySearch } from '../lib/queries';
+import { useDebounce } from '../hooks/useDebounce';
 import { ApiClientError } from '../lib/api';
 import { Badge, Button, Card, Field, Input, Switch, Spinner, EmptyState, SegmentedControl } from '../components/ui';
 import { PageHeader } from '../components/Editor';
 import { Modal, ConfirmDialog } from '../components/Dialog';
 import { KeyValueEditor } from '../components/KeyValueEditor';
+
+type Prefill = { id: string } & McpInstall;
 
 export function McpModule() {
   const { scopeId = 'global' } = useParams();
@@ -17,7 +20,15 @@ export function McpModule() {
   const del = useDeleteMcp(scopeId);
   const [editing, setEditing] = useState<McpServer | null>(null);
   const [adding, setAdding] = useState(false);
+  const [prefill, setPrefill] = useState<Prefill | null>(null);
+  const [registryOpen, setRegistryOpen] = useState(false);
   const [confirmDel, setConfirmDel] = useState<string | null>(null);
+
+  const closeServerModal = () => {
+    setAdding(false);
+    setEditing(null);
+    setPrefill(null);
+  };
 
   return (
     <div className="mx-auto max-w-3xl">
@@ -30,6 +41,9 @@ export function McpModule() {
               {reveal ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />} Reveal secrets
               <Switch checked={reveal} onCheckedChange={setReveal} />
             </label>
+            <Button variant="secondary" onClick={() => setRegistryOpen(true)}>
+              <Sparkles className="h-4 w-4" /> Browse registry
+            </Button>
             <Button variant="primary" onClick={() => setAdding(true)}>
               <Plus className="h-4 w-4" /> Add server
             </Button>
@@ -42,8 +56,13 @@ export function McpModule() {
           <EmptyState
             icon={<Plug className="h-8 w-8" />}
             title="No MCP servers"
-            description="Add a stdio command or an HTTP endpoint to expose MCP tools."
-            action={<Button variant="primary" onClick={() => setAdding(true)}><Plus className="h-4 w-4" /> Add server</Button>}
+            description="Browse the registry to add one in a click, or add a stdio command / HTTP endpoint by hand."
+            action={
+              <div className="flex gap-2">
+                <Button variant="secondary" onClick={() => setRegistryOpen(true)}><Sparkles className="h-4 w-4" /> Browse registry</Button>
+                <Button variant="primary" onClick={() => setAdding(true)}><Plus className="h-4 w-4" /> Add server</Button>
+              </div>
+            }
           />
         )}
         <div className="space-y-2">
@@ -66,19 +85,26 @@ export function McpModule() {
         </div>
       </div>
 
-      {(adding || editing) && (
+      {(adding || editing || prefill) && (
         <McpServerModal
+          key={editing?.id ?? prefill?.id ?? 'new'}
           scopeId={scopeId}
           server={editing}
+          prefill={prefill}
           open
-          onOpenChange={(o) => {
-            if (!o) {
-              setAdding(false);
-              setEditing(null);
-            }
-          }}
+          onOpenChange={(o) => !o && closeServerModal()}
         />
       )}
+
+      <McpRegistrySearchModal
+        open={registryOpen}
+        onOpenChange={setRegistryOpen}
+        onPick={(entry) => {
+          if (!entry.install) return;
+          setRegistryOpen(false);
+          setPrefill({ id: entry.id, ...entry.install });
+        }}
+      />
 
       <ConfirmDialog
         open={!!confirmDel}
@@ -100,16 +126,30 @@ export function McpModule() {
   );
 }
 
-function McpServerModal({ scopeId, server, open, onOpenChange }: { scopeId: string; server: McpServer | null; open: boolean; onOpenChange: (o: boolean) => void }) {
+function McpServerModal({
+  scopeId,
+  server,
+  prefill,
+  open,
+  onOpenChange,
+}: {
+  scopeId: string;
+  server: McpServer | null;
+  prefill?: Prefill | null;
+  open: boolean;
+  onOpenChange: (o: boolean) => void;
+}) {
   const upsert = useUpsertMcp(scopeId);
   const isEdit = !!server;
-  const [id, setId] = useState(server?.id ?? '');
-  const [transport, setTransport] = useState<'stdio' | 'http'>(server?.transport === 'stdio' ? 'stdio' : 'http');
-  const [command, setCommand] = useState(server && server.transport === 'stdio' ? server.command : '');
-  const [argsText, setArgsText] = useState(server && server.transport === 'stdio' ? (server.args ?? []).join(' ') : '');
-  const [url, setUrl] = useState(server && server.transport !== 'stdio' ? server.url : '');
-  const [headers, setHeaders] = useState<Record<string, string>>(server && server.transport !== 'stdio' ? server.headers ?? {} : {});
-  const [env, setEnv] = useState<Record<string, string>>(server && server.transport === 'stdio' ? server.env ?? {} : {});
+  const init = (server ?? prefill ?? null) as (McpServer | Prefill) | null;
+  const initAny = init as any;
+  const [id, setId] = useState(init?.id ?? '');
+  const [transport, setTransport] = useState<'stdio' | 'http'>(init?.transport === 'stdio' ? 'stdio' : 'http');
+  const [command, setCommand] = useState(init?.transport === 'stdio' ? initAny.command ?? '' : '');
+  const [argsText, setArgsText] = useState(init?.transport === 'stdio' ? (initAny.args ?? []).join(' ') : '');
+  const [url, setUrl] = useState(init && init.transport !== 'stdio' ? initAny.url ?? '' : '');
+  const [headers, setHeaders] = useState<Record<string, string>>(init && init.transport !== 'stdio' ? initAny.headers ?? {} : {});
+  const [env, setEnv] = useState<Record<string, string>>(init?.transport === 'stdio' ? initAny.env ?? {} : {});
 
   const save = async () => {
     const body =
@@ -131,7 +171,8 @@ function McpServerModal({ scopeId, server, open, onOpenChange }: { scopeId: stri
       open={open}
       onOpenChange={onOpenChange}
       size="lg"
-      title={isEdit ? `Edit ${server.id}` : 'Add MCP server'}
+      title={isEdit ? `Edit ${server.id}` : prefill ? `Add ${prefill.id}` : 'Add MCP server'}
+      description={prefill ? 'Pre-filled from the registry — review, fill any secrets, then save.' : undefined}
       footer={
         <>
           <Button variant="ghost" onClick={() => onOpenChange(false)}>Cancel</Button>
@@ -150,7 +191,9 @@ function McpServerModal({ scopeId, server, open, onOpenChange }: { scopeId: stri
           <>
             <Field label="Command"><Input mono value={command} onChange={(e) => setCommand(e.target.value)} placeholder="npx" /></Field>
             <Field label="Arguments" hint="space-separated"><Input mono value={argsText} onChange={(e) => setArgsText(e.target.value)} placeholder="-y @scope/server" /></Field>
-            <Field label="Environment"><KeyValueEditor value={env} onChange={setEnv} masked /></Field>
+            <Field label="Environment" hint="Fill in any required/secret values.">
+              <KeyValueEditor value={env} onChange={setEnv} masked />
+            </Field>
           </>
         ) : (
           <>
@@ -160,5 +203,81 @@ function McpServerModal({ scopeId, server, open, onOpenChange }: { scopeId: stri
         )}
       </div>
     </Modal>
+  );
+}
+
+function McpRegistrySearchModal({
+  open,
+  onOpenChange,
+  onPick,
+}: {
+  open: boolean;
+  onOpenChange: (o: boolean) => void;
+  onPick: (entry: McpRegistryEntry) => void;
+}) {
+  const [q, setQ] = useState('');
+  const debounced = useDebounce(q, 300);
+  const { data, isFetching } = useMcpRegistrySearch(debounced);
+  const results = data?.results ?? [];
+
+  return (
+    <Modal
+      open={open}
+      onOpenChange={onOpenChange}
+      size="xl"
+      title="Browse the MCP registry"
+      description="Search the Model Context Protocol registry and add a server in a click."
+    >
+      <div className="space-y-3">
+        <div className="relative">
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-subtle" />
+          <Input autoFocus value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search servers — e.g. github, postgres, filesystem, linear" className="h-10 pl-9" />
+        </div>
+
+        {data?.error && (
+          <div className="rounded-md border border-warning/30 bg-warning-soft px-3 py-2 text-sm text-warning">{data.error}</div>
+        )}
+
+        <div className="min-h-[18rem] space-y-2">
+          {isFetching && results.length === 0 && <div className="flex justify-center py-12"><Spinner /></div>}
+          {!isFetching && results.length === 0 && (
+            <p className="py-12 text-center text-sm text-ink-subtle">
+              {debounced ? 'No matching servers.' : 'Type to search the registry.'}
+            </p>
+          )}
+          {results.map((entry) => (
+            <RegistryResult key={`${entry.name}@${entry.version}`} entry={entry} onPick={() => onPick(entry)} />
+          ))}
+        </div>
+      </div>
+    </Modal>
+  );
+}
+
+function RegistryResult({ entry, onPick }: { entry: McpRegistryEntry; onPick: () => void }) {
+  const inst = entry.install;
+  const summary = inst
+    ? inst.transport === 'stdio'
+      ? `${inst.command} ${(inst.args ?? []).join(' ')}`.trim()
+      : inst.url
+    : '';
+  return (
+    <div className="flex items-start gap-3 rounded-md border border-border p-3 transition-colors hover:border-border-strong">
+      <div className="min-w-0 flex-1">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="truncate font-mono text-sm text-ink">{entry.id}</span>
+          {inst && <Badge tone={inst.transport === 'stdio' ? 'info' : 'clay'}>{inst.transport}</Badge>}
+          {entry.version && <span className="tabular text-[11px] text-ink-subtle">v{entry.version}</span>}
+        </div>
+        {entry.description && <p className="mt-0.5 line-clamp-2 text-sm text-ink-muted">{entry.description}</p>}
+        {summary && <div className="mt-1 truncate font-mono text-[11px] text-ink-subtle">{summary}</div>}
+        {inst?.requiredKeys && inst.requiredKeys.length > 0 && (
+          <div className="mt-1 text-[11px] text-ink-subtle">needs: {inst.requiredKeys.join(', ')}</div>
+        )}
+      </div>
+      <Button size="sm" variant="secondary" onClick={onPick} className="shrink-0">
+        <ArrowDownToLine className="h-3.5 w-3.5" /> Add
+      </Button>
+    </div>
   );
 }

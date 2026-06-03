@@ -21,6 +21,8 @@ import type {
   BackupsResponse,
   RuntimeSummary,
   ProjectRef,
+  McpRegistrySearchResponse,
+  PluginRegistrySearchResponse,
 } from '@ccm/shared';
 import { api, qk, scopeUrl } from './api';
 
@@ -311,5 +313,23 @@ export function useUpdateAppConfig() {
       qc.setQueryData(qk.appConfig, cfg);
       void qc.invalidateQueries({ queryKey: qk.scopes });
     },
+  });
+}
+
+// --- registry / marketplace discovery ---
+
+export function useMcpRegistrySearch(query: string) {
+  return useQuery({
+    queryKey: ['registry-mcp', query],
+    queryFn: () => api.get<McpRegistrySearchResponse>(`/api/registry/mcp?q=${enc(query)}`),
+    staleTime: 60_000,
+  });
+}
+
+export function usePluginRegistrySearch(query: string) {
+  return useQuery({
+    queryKey: ['registry-plugins', query],
+    queryFn: () => api.get<PluginRegistrySearchResponse>(`/api/registry/plugins?q=${enc(query)}`),
+    staleTime: 60_000,
   });
 }

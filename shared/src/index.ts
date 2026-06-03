@@ -9,3 +9,4 @@ export * from './envelope';
 export * from './artifacts';
 export * from './permissions';
 export * from './api';
+export * from './registry';

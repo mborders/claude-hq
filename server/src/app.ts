@@ -3,6 +3,7 @@ import type { ServerEnv } from './env';
 import { createContext } from './context';
 import { healthRoutes } from './routes/health';
 import { apiRoutes } from './routes/api';
+import { registryRoutes } from './routes/registry';
 import { registerStaticSpa } from './http/staticSpa';
 import { registerErrorHandler } from './http/errorHandler';
 
@@ -35,6 +36,7 @@ export async function buildApp(deps: AppDeps): Promise<FastifyInstance> {
 
   // API routes under /api.
   await app.register(healthRoutes(env), { prefix: '/api' });
+  await app.register(registryRoutes(ctx), { prefix: '/api' });
   await app.register(apiRoutes(ctx), { prefix: '/api' });
 
   // Static SPA last so its catch-all not-found handler doesn't shadow /api.
