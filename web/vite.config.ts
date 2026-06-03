@@ -20,7 +20,10 @@ export default defineConfig({
     strictPort: true,
     proxy: {
       '/api': {
-        target: `http://localhost:${API_PORT}`,
+        // 127.0.0.1 (not "localhost") so the proxy always hits the IPv4 dev API
+        // and isn't shadowed by anything listening on IPv6 ::1 (e.g. a Docker
+        // container publishing the same port).
+        target: `http://127.0.0.1:${API_PORT}`,
         changeOrigin: true,
       },
     },
