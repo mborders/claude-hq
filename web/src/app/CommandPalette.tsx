@@ -36,7 +36,7 @@ export function CommandPalette() {
       <RadixDialog.Portal>
         <RadixDialog.Overlay className="fixed inset-0 z-40 animate-fade-in bg-ink/30 backdrop-blur-[2px]" />
         <RadixDialog.Content
-          className="fixed left-1/2 top-[18%] z-50 w-[92vw] max-w-xl -translate-x-1/2 animate-scale-in overflow-hidden rounded-lg border border-border bg-surface shadow-lg"
+          className="fixed inset-x-0 top-0 z-50 mx-auto mt-[18vh] w-[92vw] max-w-xl animate-scale-in overflow-hidden rounded-lg border border-border bg-surface shadow-lg"
           aria-label="Command palette"
         >
           <Command label="Command palette" className="[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-[11px] [&_[cmdk-group-heading]]:font-semibold [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-wide [&_[cmdk-group-heading]]:text-ink-subtle">

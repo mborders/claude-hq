@@ -238,7 +238,7 @@ function RuleBuilder({ col, onAdd }: { col: Col; onAdd: (rule: string) => void }
         <Popover.Content
           sideOffset={6}
           align="end"
-          className="z-50 w-80 animate-scale-in rounded-lg border border-border bg-surface p-4 shadow-lg"
+          className="z-50 w-80 animate-fade-in rounded-lg border border-border bg-surface p-4 shadow-lg"
         >
           <div className="space-y-3">
             <div>
