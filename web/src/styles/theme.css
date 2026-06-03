@@ -1,0 +1,67 @@
+/*
+ * Warm Clay tokens — terracotta accent on warm paper (light) / warm charcoal (dark).
+ * Values are space-separated RGB channels so Tailwind's `rgb(var(--x) / <alpha>)`
+ * mapping supports opacity modifiers. Theme switch = toggling the `.dark` class.
+ */
+
+:root {
+  /* surfaces */
+  --bg: 250 247 242;
+  --bg-subtle: 243 238 230;
+  --surface: 255 255 255;
+  --surface-2: 251 248 243;
+  --border: 231 223 211;
+  --border-strong: 216 205 189;
+
+  /* text (ink brown, never pure black) */
+  --ink: 43 33 24;
+  --ink-muted: 111 98 83;
+  --ink-subtle: 154 139 121;
+
+  /* primary clay / terracotta */
+  --clay: 194 96 61;
+  --clay-hover: 172 81 47;
+  --clay-active: 143 66 37;
+  --clay-soft: 244 226 216;
+  --clay-ring: 232 181 158;
+
+  /* semantics */
+  --success: 94 123 82;
+  --success-soft: 230 235 223;
+  --warning: 184 134 59;
+  --warning-soft: 244 233 210;
+  --danger: 178 58 46;
+  --danger-soft: 246 222 217;
+  --info: 79 109 122;
+
+  color-scheme: light;
+}
+
+.dark {
+  --bg: 26 22 19;
+  --bg-subtle: 20 17 14;
+  --surface: 34 29 24;
+  --surface-2: 42 36 30;
+  --border: 54 46 38;
+  --border-strong: 70 60 49;
+
+  --ink: 241 233 222;
+  --ink-muted: 182 166 145;
+  --ink-subtle: 138 123 104;
+
+  --clay: 210 119 79;
+  --clay-hover: 224 138 99;
+  --clay-active: 185 97 56;
+  --clay-soft: 58 42 32;
+  --clay-ring: 122 74 51;
+
+  --success: 143 168 126;
+  --success-soft: 41 48 35;
+  --warning: 214 168 90;
+  --warning-soft: 58 47 28;
+  --danger: 224 105 90;
+  --danger-soft: 58 33 28;
+  --info: 130 166 179;
+
+  color-scheme: dark;
+}

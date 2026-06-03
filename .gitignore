@@ -1,0 +1,27 @@
+# dependencies
+node_modules/
+
+# build output
+dist/
+*.tsbuildinfo
+
+# app runtime data (config + backups written by the tool)
+.appdata/
+.data/
+
+# env / secrets
+.env
+.env.*
+!.env.example
+
+# logs
+*.log
+npm-debug.log*
+
+# editor / OS
+.DS_Store
+.vscode/
+.idea/
+
+# test coverage
+coverage/

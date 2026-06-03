@@ -1,0 +1,64 @@
+@import './theme.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  *,
+  ::before,
+  ::after {
+    border-color: rgb(var(--border));
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    font-synthesis: none;
+  }
+
+  body {
+    @apply bg-bg font-sans text-base text-ink antialiased;
+    margin: 0;
+  }
+
+  /* Fraunces display — warm serif with soft terminals + optical sizing. */
+  .font-display {
+    font-family: 'Fraunces Variable', ui-serif, Georgia, serif;
+    font-optical-sizing: auto;
+    font-variation-settings: 'SOFT' 40, 'WONK' 0;
+    letter-spacing: -0.01em;
+  }
+
+  ::selection {
+    background: rgb(var(--clay-soft));
+  }
+
+  /* Thin, warm-tinted scrollbars. */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: rgb(var(--border-strong)) transparent;
+  }
+  *::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  *::-webkit-scrollbar-thumb {
+    background-color: rgb(var(--border-strong));
+    border-radius: 9999px;
+    border: 3px solid transparent;
+    background-clip: content-box;
+  }
+  *::-webkit-scrollbar-thumb:hover {
+    background-color: rgb(var(--ink-subtle));
+  }
+}
+
+@layer utilities {
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+  /* Focus ring used across interactive elements. */
+  .focus-ring {
+    @apply outline-none ring-2 ring-clay-ring ring-offset-2 ring-offset-bg;
+  }
+}

@@ -1,0 +1,33 @@
+import fs from 'node:fs';
+import { buildApp } from './app';
+import { loadEnv } from './env';
+
+async function main(): Promise<void> {
+  const env = loadEnv();
+
+  // Ensure the app's own writable data dir exists (config + backups).
+  fs.mkdirSync(env.appDataDir, { recursive: true });
+
+  // Warn early (not fatal) if the global config mount looks wrong.
+  if (!fs.existsSync(env.claudeHomeDir)) {
+    console.warn(
+      `[ccm] CLAUDE_HOME_DIR does not exist: ${env.claudeHomeDir}\n` +
+        `      The global scope will appear empty until this path is mounted/created.`,
+    );
+  }
+
+  const app = await buildApp({ env });
+
+  try {
+    await app.listen({ port: env.port, host: env.host });
+    app.log.info(
+      { claudeHome: env.claudeHomeDir, projectsRoots: env.projectsRoots, readOnly: env.readOnly },
+      `Claude Config Manager listening on http://${env.host}:${env.port}`,
+    );
+  } catch (err) {
+    app.log.error(err);
+    process.exit(1);
+  }
+}
+
+void main();

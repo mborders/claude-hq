@@ -1,0 +1,54 @@
+services:
+  claude-config-manager:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: claude-config-manager:local
+    container_name: claude-config-manager
+
+    # Run as the HOST user so files written into the bind mounts are owned
+    # correctly. On macOS Docker Desktop this is belt-and-suspenders; on Linux it
+    # is REQUIRED. UID/GID come from .env (see .env.example for how to seed them).
+    user: "${UID:-1000}:${GID:-1000}"
+
+    ports:
+      - "${HOST_PORT:-7878}:7878"
+
+    environment:
+      PORT: "7878"
+      NODE_ENV: "production"
+      CLAUDE_HOME_DIR: "/host/claude-home"
+      PROJECTS_ROOTS: "/host/projects" # ':'-separate for multiple roots
+      APP_DATA_DIR: "/data"
+      # Safety switch: "true" makes the backend refuse ALL writes.
+      READ_ONLY: "${READ_ONLY:-false}"
+
+    volumes:
+      # 1) Global Claude config (read-write by default).
+      - "${HOST_CLAUDE_HOME:-${HOME}/.claude}:/host/claude-home"
+      # 2) Projects root to scan for project-level .claude directories.
+      - "${HOST_PROJECTS_ROOT:-${HOME}/Documents/GitHub}:/host/projects"
+      # 3) The app's OWN config + timestamped backups (kept OUT of ~/.claude).
+      - "./.appdata:/data"
+
+    restart: unless-stopped
+
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:7878/api/health"]
+      interval: 15s
+      timeout: 3s
+      retries: 3
+      start_period: 8s
+# ---------------------------------------------------------------------------
+# READ-ONLY GLOBAL CONFIG VARIANT
+#   Protect ~/.claude at the kernel level by making mount (1) read-only:
+#       - "${HOST_CLAUDE_HOME:-${HOME}/.claude}:/host/claude-home:ro"
+#   (Set READ_ONLY=true in .env to also disable project edits.)
+#
+# MULTIPLE PROJECT ROOTS — add more mounts and list them in PROJECTS_ROOTS:
+#   volumes:
+#     - "${HOME}/Documents/GitHub:/host/projects"
+#     - "${HOME}/work/repos:/host/projects2"
+#   environment:
+#     PROJECTS_ROOTS: "/host/projects:/host/projects2"
+# ---------------------------------------------------------------------------

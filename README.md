@@ -1,0 +1,145 @@
+# Claude Config Manager
+
+A sleek, local web tool for managing your **Claude Code** configuration — both the
+global user config (`~/.claude/`) and per-project config (`<project>/.claude/`) —
+from one intuitive interface. Edit permissions, memory, subagents, slash commands,
+skills, MCP servers, hooks, and plugins with smart forms, a raw escape hatch,
+automatic backups, and validation before every write.
+
+> Built with React + Vite + TypeScript + Tailwind on the front, a small Fastify +
+> TypeScript API on the back, shipped as a single Docker image.
+
+---
+
+## Highlights
+
+- **Two scopes, one UI** — switch between your **Global** config and any **project**
+  under a configurable root. Projects are auto-discovered (with a "has `.claude/`"
+  badge) and you can add any directory manually.
+- **Permissions, done right** — a dedicated allow/deny editor with rules grouped by
+  tool, a rule builder, live search, and confirmation prompts before granting broad
+  access. Editing permissions never drops your other settings.
+- **Everything else** — Settings, Memory (`CLAUDE.md`), Subagents, Slash commands,
+  Skills, MCP servers, Hooks, and Plugins/Marketplaces — each with friendly forms
+  **and** a raw JSON/Markdown editor (CodeMirror) you can drop into anytime.
+- **Safe by construction** — every write is validated, runs through a path sandbox,
+  and is preceded by a **timestamped backup** you can restore. Secrets (`env`
+  values, MCP auth headers) are redacted by default. Runtime data (sessions,
+  metrics, credentials) is strictly read-only.
+- **Warm, fast, keyboard-friendly** — a distinctive "Warm Clay" design with light &
+  dark themes, a ⌘K command palette, and an app-wide unsaved-changes guard.
+
+---
+
+## Quick start (Docker)
+
+Requirements: Docker + Docker Compose.
+
+```bash
+git clone <this-repo> && cd claude-config-manager
+
+# One-time: seed your host UID/GID into .env (so files stay owned by you) and
+# create the app-data directory. (make setup does this for you.)
+make setup
+
+# Build + run
+make up            # == docker compose up -d --build
+
+open http://localhost:7878
+```
+
+That's it. The container mounts your `~/.claude` and `~/Documents/GitHub` (by
+default) and serves the UI + API on port 7878.
+
+To stop: `make down`. To see logs: `make logs`.
+
+### Pointing at different paths
+
+Edit `.env` (copied from `.env.example`):
+
+| Variable | Purpose | Default |
+|---|---|---|
+| `HOST_PORT` | Port on your machine | `7878` |
+| `HOST_CLAUDE_HOME` | Global config to mount | `~/.claude` |
+| `HOST_PROJECTS_ROOT` | Projects root to scan | `~/Documents/GitHub` |
+| `READ_ONLY` | `true` disables all writes | `false` |
+| `UID` / `GID` | Your host user (for correct file ownership) | seeded by `make setup` |
+
+**Protect your global config:** for a read-only mount at the kernel level, change
+mount (1) in `docker-compose.yml` to end with `:ro`, and/or set `READ_ONLY=true`.
+Multiple project roots are supported — see the comments in `docker-compose.yml`.
+
+---
+
+## Local development (no Docker)
+
+Requirements: Node 22 (`nvm use`).
+
+```bash
+npm install
+npm run dev        # Vite UI on :5173 (or next free port) + API on :7878
+```
+
+The Vite dev server proxies `/api` to the API, which reads your real `~/.claude`
+and `~/Documents/GitHub` directly. Useful scripts:
+
+```bash
+npm test           # vitest (fs/security core + API integration)
+npm run typecheck  # tsc across shared/server/web
+npm run lint       # eslint
+npm run build      # production build (web/dist + server/dist/server.cjs)
+```
+
+---
+
+## How it works
+
+```
+claude-config-manager/
+├── shared/   @ccm/shared — TypeScript wire contract (types + permission helpers)
+├── server/   @ccm/server — Fastify API + static SPA host (bundled to one .cjs)
+└── web/      @ccm/web    — React + Vite SPA
+```
+
+- **Single port, single process.** In production the Fastify server serves the
+  built SPA and the `/api` JSON API on one port — clean to run and to healthcheck.
+- **The server never executes anything.** It only reads and writes config *text*
+  (no running of hooks, MCP commands, or git), which removes the biggest class of
+  risk for a config editor.
+- **The write pipeline** (every mutation) is:
+  `sandbox-resolve → reject readonly → sha256 concurrency check → validate (zod)
+  → backup → atomic write (temp file + rename, mode preserved)`.
+- **Scopes** are opaque ids (`global` or `project:<base64url path>`), decoded and
+  re-validated against an allow-list of mounted roots on every request.
+- **Backups** live under `APP_DATA_DIR/backups/` (the mounted `./.appdata`),
+  deliberately *outside* `~/.claude`, so they survive a read-only global mount and
+  never collide with Claude Code's own backups.
+
+### Safety notes
+
+- Writes that grant broad access (e.g. `Bash(*)`, `Read(/**)`), clear all deny
+  rules, delete an artifact, or restore a backup require explicit confirmation.
+- Secrets are masked in responses by default; reveal is per-request and the raw
+  file endpoint (the explicit escape hatch) is the only place unmasked text is
+  returned.
+- Concurrent/external edits are caught by a sha256 check — you'll be told if a file
+  changed underneath you instead of clobbering it.
+
+---
+
+## Environment variables (server)
+
+| Var | Default | Purpose |
+|---|---|---|
+| `PORT` | `7878` | Port the server binds |
+| `CLAUDE_HOME_DIR` | `~/.claude` | Global config directory |
+| `PROJECTS_ROOTS` | `~/Documents/GitHub` | `:`-separated roots to scan |
+| `APP_DATA_DIR` | `./.appdata` | Tool's own config + backups |
+| `READ_ONLY` | `false` | Refuse all writes when `true` |
+| `WEB_DIST_DIR` | `<cwd>/web/dist` | Built SPA location |
+
+---
+
+## License
+
+MIT.
