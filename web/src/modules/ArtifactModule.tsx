@@ -179,6 +179,23 @@ function ArtifactEditor({ type, name, create }: { type: ArtifactType; name?: str
     return <div className="flex h-full items-center justify-center"><Spinner /></div>;
   }
 
+  if (!create && loaded.isError) {
+    return (
+      <div className="px-6 py-12">
+        <EmptyState
+          icon={<FileText className="h-8 w-8" />}
+          title={`${meta.singular} not found`}
+          description="It may have been moved or deleted."
+          action={
+            <Button variant="secondary" onClick={() => navigate(`/scope/${scopeId}/${type}`)}>
+              Back to {meta.title.toLowerCase()}
+            </Button>
+          }
+        />
+      </div>
+    );
+  }
+
   const title = create ? `New ${meta.singular}` : name;
   const relPath = !create ? loaded.data?.meta.relPath : undefined;
 
@@ -199,7 +216,13 @@ function ArtifactEditor({ type, name, create }: { type: ArtifactType; name?: str
           !create &&
           name && (
             <div className="flex items-center gap-1">
-              <TransferButton type={type} label={name} identity={{ name }} fromScopeId={scopeId} />
+              <TransferButton
+                type={type}
+                label={name}
+                identity={{ name }}
+                fromScopeId={scopeId}
+                onMove={() => navigate(`/scope/${scopeId}/${type}`)}
+              />
               <Button size="sm" variant="danger" onClick={() => setConfirmDelete(true)}>
                 <Trash2 className="h-4 w-4" />
               </Button>

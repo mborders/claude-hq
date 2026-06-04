@@ -1,11 +1,12 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import { ArrowRightLeft, Globe, FolderGit2, Loader2 } from 'lucide-react';
+import { ArrowRightLeft, Globe, FolderGit2, Loader2, Search } from 'lucide-react';
 import type { TransferType, TransferMode, HookRow } from '@ccm/shared';
 import { useScopes, useTransfer } from '../lib/queries';
 import { ApiClientError } from '../lib/api';
 import { Modal, ConfirmDialog } from './Dialog';
-import { SegmentedControl, Tooltip } from './ui';
+import { Input, SegmentedControl, Tooltip } from './ui';
 import { cn } from '../lib/cn';
 
 export interface TransferIdentity {
@@ -20,12 +21,15 @@ export function TransferButton({
   label,
   identity,
   fromScopeId,
+  onMove,
   className,
 }: {
   type: TransferType;
   label: string;
   identity: TransferIdentity;
   fromScopeId: string;
+  /** Called after a successful MOVE (e.g. to navigate away from a now-empty editor). */
+  onMove?: () => void;
   className?: string;
 }) {
   const [open, setOpen] = useState(false);
@@ -48,7 +52,14 @@ export function TransferButton({
         </button>
       </Tooltip>
       {open && (
-        <TransferDialog type={type} label={label} identity={identity} fromScopeId={fromScopeId} onClose={() => setOpen(false)} />
+        <TransferDialog
+          type={type}
+          label={label}
+          identity={identity}
+          fromScopeId={fromScopeId}
+          onMove={onMove}
+          onClose={() => setOpen(false)}
+        />
       )}
     </>
   );
@@ -59,35 +70,52 @@ function TransferDialog({
   label,
   identity,
   fromScopeId,
+  onMove,
   onClose,
 }: {
   type: TransferType;
   label: string;
   identity: TransferIdentity;
   fromScopeId: string;
+  onMove?: () => void;
   onClose: () => void;
 }) {
+  const navigate = useNavigate();
   const { data } = useScopes();
   const transfer = useTransfer();
   const [mode, setMode] = useState<TransferMode>('move');
   const [busy, setBusy] = useState<string | null>(null);
+  const [filter, setFilter] = useState('');
   const [confirm, setConfirm] = useState<{ toScopeId: string; toLabel: string; warnings: string[] } | null>(null);
 
-  const destinations = [
-    ...(fromScopeId !== 'global' && data
-      ? [{ id: 'global', label: 'Global', sub: '~/.claude', has: data.global.exists }]
-      : []),
-    ...(data?.projects ?? [])
-      .filter((p) => p.id !== fromScopeId)
-      .map((p) => ({ id: p.id, label: p.name, sub: p.path, has: p.hasClaudeDir })),
-  ];
+  const allDestinations = useMemo(
+    () => [
+      ...(fromScopeId !== 'global' && data
+        ? [{ id: 'global', label: 'Global', sub: '~/.claude', has: data.global.exists }]
+        : []),
+      ...(data?.projects ?? [])
+        .filter((p) => p.id !== fromScopeId)
+        .map((p) => ({ id: p.id, label: p.name, sub: p.path, has: p.hasClaudeDir })),
+    ],
+    [data, fromScopeId],
+  );
+
+  const destinations = filter.trim()
+    ? allDestinations.filter((d) => (d.label + ' ' + d.sub).toLowerCase().includes(filter.toLowerCase()))
+    : allDestinations;
+
+  const destPath = (toScopeId: string) =>
+    identity.name ? `/scope/${toScopeId}/${type}/${encodeURIComponent(identity.name)}` : `/scope/${toScopeId}/${type}`;
 
   const run = async (toScopeId: string, toLabel: string, confirmOverwrite: boolean) => {
     setBusy(toScopeId);
     try {
       await transfer.mutateAsync({ type, fromScopeId, toScopeId, mode, confirm: confirmOverwrite, ...identity });
-      toast.success(`${mode === 'move' ? 'Moved' : 'Copied'} ${label} to ${toLabel}`);
-      onClose();
+      toast.success(`${mode === 'move' ? 'Moved' : 'Copied'} ${label} to ${toLabel}`, {
+        action: { label: 'Open', onClick: () => navigate(destPath(toScopeId)) },
+      });
+      if (mode === 'move' && onMove) onMove();
+      else onClose();
     } catch (e) {
       if (e instanceof ApiClientError && e.needsConfirm) {
         setConfirm({ toScopeId, toLabel, warnings: e.warnings ?? ['Overwrite the existing item?'] });
@@ -112,10 +140,25 @@ function TransferDialog({
             ]}
           />
           <div>
-            <div className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-ink-subtle">Destination</div>
+            <div className="mb-1.5 flex items-center justify-between gap-2">
+              <span className="text-[11px] font-semibold uppercase tracking-wide text-ink-subtle">Destination</span>
+              {allDestinations.length > 5 && (
+                <div className="relative">
+                  <Search className="pointer-events-none absolute left-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-ink-subtle" />
+                  <Input
+                    value={filter}
+                    onChange={(e) => setFilter(e.target.value)}
+                    placeholder="Filter scopes"
+                    className="h-8 w-44 pl-7 text-sm"
+                  />
+                </div>
+              )}
+            </div>
             <div className="max-h-72 space-y-1 overflow-auto">
               {destinations.length === 0 && (
-                <p className="py-6 text-center text-sm text-ink-subtle">No other scopes available.</p>
+                <p className="py-6 text-center text-sm text-ink-subtle">
+                  {filter ? 'No matching scopes.' : 'No other scopes available.'}
+                </p>
               )}
               {destinations.map((d) => (
                 <button
