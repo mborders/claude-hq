@@ -19,6 +19,7 @@ import type {
   MemoryDoc,
   WriteResult,
   BackupsResponse,
+  BackupPreviewResponse,
   RuntimeSummary,
   ProjectRef,
   McpRegistrySearchResponse,
@@ -121,8 +122,17 @@ export function useMemoryDoc(scopeId: string, relPath: string, enabled = true) {
 export function useBackups(scopeId: string, relPath: string, enabled = true) {
   return useQuery({
     queryKey: qk.backups(scopeId, relPath),
-    enabled,
+    enabled: enabled && !!relPath,
     queryFn: () => api.get<BackupsResponse>(scopeUrl(scopeId, `/backups?relPath=${enc(relPath)}`)),
+  });
+}
+
+export function useBackupPreview(scopeId: string, backupId: string, relPath: string, enabled = true) {
+  return useQuery({
+    queryKey: ['backup-preview', scopeId, backupId, relPath],
+    enabled: enabled && !!backupId && !!relPath,
+    queryFn: () =>
+      api.get<BackupPreviewResponse>(scopeUrl(scopeId, `/backups/${enc(backupId)}?relPath=${enc(relPath)}`)),
   });
 }
 

@@ -1,7 +1,9 @@
-import { type ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
+import { useParams } from 'react-router-dom';
 import { History, Code2, LayoutPanelLeft, EyeOff } from 'lucide-react';
 import { Badge, Button, CopyButton, SegmentedControl } from './ui';
 import { useDirtyRegistration } from '../hooks/useDirtyRegistration';
+import { BackupsModal } from './BackupsModal';
 
 export function PageHeader({
   title,
@@ -45,7 +47,6 @@ export interface EditorFrameProps {
   onModeChange?: (m: 'form' | 'raw') => void;
   onSave: () => void | Promise<void>;
   onDiscard: () => void;
-  onShowBackups?: () => void;
   headerExtra?: ReactNode;
   children: ReactNode;
 }
@@ -63,13 +64,15 @@ export function EditorFrame({
   onModeChange,
   onSave,
   onDiscard,
-  onShowBackups,
   headerExtra,
   children,
 }: EditorFrameProps) {
   useDirtyRegistration(regKey, dirty, { save: onSave, discard: onDiscard });
+  const { scopeId = 'global' } = useParams();
+  const [backupsOpen, setBackupsOpen] = useState(false);
 
   return (
+    <>
     <div className="flex h-full flex-col">
       <header className="flex flex-wrap items-center gap-3 border-b border-border px-6 py-3">
         <div className="min-w-0">
@@ -107,8 +110,8 @@ export function EditorFrame({
               ]}
             />
           )}
-          {onShowBackups && relPath && (
-            <Button size="sm" variant="ghost" onClick={onShowBackups}>
+          {relPath && (
+            <Button size="sm" variant="ghost" onClick={() => setBackupsOpen(true)}>
               <History className="h-4 w-4" /> Backups
             </Button>
           )}
@@ -126,5 +129,9 @@ export function EditorFrame({
       </header>
       <div className="min-h-0 flex-1 overflow-auto">{children}</div>
     </div>
+      {relPath && (
+        <BackupsModal scopeId={scopeId} relPath={relPath} open={backupsOpen} onOpenChange={setBackupsOpen} />
+      )}
+    </>
   );
 }
