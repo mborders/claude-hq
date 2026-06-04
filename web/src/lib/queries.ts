@@ -23,6 +23,8 @@ import type {
   ProjectRef,
   McpRegistrySearchResponse,
   PluginRegistrySearchResponse,
+  TransferRequest,
+  TransferResult,
 } from '@ccm/shared';
 import { api, qk, scopeUrl } from './api';
 
@@ -331,5 +333,16 @@ export function usePluginRegistrySearch(query: string) {
     queryKey: ['registry-plugins', query],
     queryFn: () => api.get<PluginRegistrySearchResponse>(`/api/registry/plugins?q=${enc(query)}`),
     staleTime: 60_000,
+  });
+}
+
+// --- cross-scope move / copy ---
+
+export function useTransfer() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (req: TransferRequest) => api.post<TransferResult>('/api/transfer', req),
+    // A transfer touches two scopes' lists; refresh everything.
+    onSuccess: () => void qc.invalidateQueries(),
   });
 }

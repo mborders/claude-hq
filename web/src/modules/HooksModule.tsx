@@ -7,6 +7,7 @@ import { useHooks, useWriteHooks } from '../lib/queries';
 import { ApiClientError } from '../lib/api';
 import { Button, Input, Spinner, EmptyState } from '../components/ui';
 import { EditorFrame } from '../components/Editor';
+import { TransferButton } from '../components/TransferButton';
 
 const EVENTS = [
   'PreToolUse', 'PostToolUse', 'UserPromptSubmit', 'Notification', 'Stop', 'SubagentStop', 'SessionStart', 'SessionEnd', 'PreCompact',
@@ -67,7 +68,7 @@ export function HooksModule() {
           />
         ) : (
           <div className="space-y-2">
-            <div className="grid grid-cols-[150px_120px_1fr_72px_32px] gap-2 px-1 text-[11px] font-semibold uppercase tracking-wide text-ink-subtle">
+            <div className="grid grid-cols-[150px_120px_1fr_64px_auto] gap-2 px-1 text-[11px] font-semibold uppercase tracking-wide text-ink-subtle">
               <span>Event</span>
               <span>Matcher</span>
               <span>Command</span>
@@ -75,7 +76,7 @@ export function HooksModule() {
               <span />
             </div>
             {rows.map((r, i) => (
-              <div key={i} className="grid grid-cols-[150px_120px_1fr_72px_32px] items-center gap-2">
+              <div key={i} className="grid grid-cols-[150px_120px_1fr_64px_auto] items-center gap-2">
                 <select
                   value={r.event}
                   onChange={(e) => setRow(i, { event: e.target.value })}
@@ -92,9 +93,14 @@ export function HooksModule() {
                   onChange={(e) => setRow(i, { timeout: e.target.value ? Number(e.target.value) : undefined })}
                   placeholder="—"
                 />
-                <button onClick={() => removeRow(i)} className="flex h-9 items-center justify-center rounded-sm text-ink-subtle hover:bg-danger-soft hover:text-danger" aria-label="Remove">
-                  <X className="h-4 w-4" />
-                </button>
+                <div className="flex items-center">
+                  {r.command.trim() && (
+                    <TransferButton type="hooks" label={`${r.event} hook`} identity={{ hook: r }} fromScopeId={scopeId} />
+                  )}
+                  <button onClick={() => removeRow(i)} className="flex h-9 w-8 items-center justify-center rounded-sm text-ink-subtle hover:bg-danger-soft hover:text-danger" aria-label="Remove">
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
               </div>
             ))}
           </div>

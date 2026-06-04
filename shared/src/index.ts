@@ -10,3 +10,4 @@ export * from './artifacts';
 export * from './permissions';
 export * from './api';
 export * from './registry';
+export * from './transfer';

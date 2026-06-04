@@ -12,6 +12,7 @@ import type {
 import type { AppContext } from '../context';
 import type { ResolvedScope } from '../domain/paths';
 import { createServices } from '../services';
+import { TransferService } from '../services/transferService';
 import { validate } from '../schemas';
 import { parseFrontmatter } from '../fs/frontmatter';
 import { readText } from '../fs/safeFs';
@@ -44,6 +45,7 @@ function isTrue(v: string | undefined): boolean {
 
 export function apiRoutes(ctx: AppContext): FastifyPluginAsync {
   const s = createServices(ctx);
+  const transfers = new TransferService(ctx);
   const requireScope = (id: string) => s.scopes.requireScope(id);
 
   return async (app) => {
@@ -66,6 +68,9 @@ export function apiRoutes(ctx: AppContext): FastifyPluginAsync {
     // --- app config ---
     app.get('/app-config', async () => ctx.appConfig.load());
     app.patch('/app-config', async (req) => applyAppConfigPatch(ctx, (req.body as Partial<AppConfig>) ?? {}));
+
+    // --- move / copy an item between scopes ---
+    app.post('/transfer', async (req) => transfers.transfer(req.body as any));
 
     // --- settings / permissions / hooks ---
     app.get('/scopes/:scopeId/settings', async (req) =>

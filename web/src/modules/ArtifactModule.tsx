@@ -9,6 +9,7 @@ import { splitFrontmatter, joinFrontmatter } from '../lib/frontmatter';
 import { Button, Card, Badge, Field, Input, Textarea, EmptyState, SegmentedControl, Spinner } from '../components/ui';
 import { PageHeader, EditorFrame } from '../components/Editor';
 import { ConfirmDialog } from '../components/Dialog';
+import { TransferButton } from '../components/TransferButton';
 import { CodeMirror, type CodeIssue } from '../components/CodeMirror';
 
 const META: Record<ArtifactType, { singular: string; title: string; icon: typeof Bot; bodyLabel: string; bodyHint: string }> = {
@@ -69,6 +70,7 @@ function ArtifactList({ type }: { type: ArtifactType }) {
                   </div>
                   {item.description && <p className="mt-0.5 line-clamp-1 text-sm text-ink-muted">{item.description}</p>}
                 </div>
+                <TransferButton type={type} label={item.name} identity={{ name: item.name }} fromScopeId={scopeId} />
                 <ChevronRight className="h-4 w-4 text-ink-subtle transition-transform group-hover:translate-x-0.5" />
               </Card>
             </Link>
@@ -194,10 +196,14 @@ function ArtifactEditor({ type, name, create }: { type: ArtifactType; name?: str
         onSave={save}
         onDiscard={discard}
         headerExtra={
-          !create && (
-            <Button size="sm" variant="danger" onClick={() => setConfirmDelete(true)}>
-              <Trash2 className="h-4 w-4" />
-            </Button>
+          !create &&
+          name && (
+            <div className="flex items-center gap-1">
+              <TransferButton type={type} label={name} identity={{ name }} fromScopeId={scopeId} />
+              <Button size="sm" variant="danger" onClick={() => setConfirmDelete(true)}>
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </div>
           )
         }
       >

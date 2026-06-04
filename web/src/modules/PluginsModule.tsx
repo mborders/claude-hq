@@ -15,6 +15,7 @@ import { PageHeader } from '../components/Editor';
 import { Modal } from '../components/Dialog';
 import { ApiClientError } from '../lib/api';
 import { useDebounce } from '../hooks/useDebounce';
+import { TransferButton } from '../components/TransferButton';
 
 export function PluginsModule() {
   const { scopeId = 'global' } = useParams();
@@ -66,16 +67,19 @@ export function PluginsModule() {
                         <div className="truncate font-mono text-sm text-ink">{p.name}</div>
                         {p.installs[0]?.version && <div className="text-[11px] text-ink-subtle">v{p.installs[0].version}</div>}
                       </div>
-                      <Switch
-                        checked={p.enabled}
-                        onCheckedChange={async (enabled) => {
-                          try {
-                            await toggle.mutateAsync({ pluginId: p.id, enabled });
-                          } catch (e) {
-                            toast.error(e instanceof ApiClientError ? e.message : 'Toggle failed');
-                          }
-                        }}
-                      />
+                      <div className="flex items-center gap-1.5">
+                        <TransferButton type="plugins" label={p.name} identity={{ pluginId: p.id }} fromScopeId={scopeId} />
+                        <Switch
+                          checked={p.enabled}
+                          onCheckedChange={async (enabled) => {
+                            try {
+                              await toggle.mutateAsync({ pluginId: p.id, enabled });
+                            } catch (e) {
+                              toast.error(e instanceof ApiClientError ? e.message : 'Toggle failed');
+                            }
+                          }}
+                        />
+                      </div>
                     </div>
                   ))}
                 </Card>

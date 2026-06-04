@@ -307,6 +307,22 @@ export class SettingsService {
     );
   }
 
+  /** Remove an enabledPlugins entry entirely (used when moving a plugin to another scope). */
+  removeEnabledPlugin(scope: ResolvedScope, pluginId: string): Promise<WriteResult> {
+    return this.writeMerged(
+      scope,
+      defaultVariant(scope),
+      (data) => {
+        const ep = (data.enabledPlugins as Record<string, boolean>) ?? {};
+        delete ep[pluginId];
+        if (Object.keys(ep).length === 0) delete data.enabledPlugins;
+        else data.enabledPlugins = ep;
+        return [];
+      },
+      {},
+    );
+  }
+
   addMarketplace(scope: ResolvedScope, name: string, repo: string): Promise<WriteResult> {
     return this.writeMerged(
       scope,

@@ -248,4 +248,64 @@ describe('API integration', () => {
     expect(res.statusCode).toBe(409);
     expect(res.json().code).toBe('CONFIRM_REQUIRED');
   });
+
+  async function makeProjectAgent(name: string, body = '# m') {
+    return app.inject({
+      method: 'POST',
+      url: `/api/scopes/${projectId}/agents`,
+      payload: { name, structured: { frontmatter: { name, description: 'd' }, body } },
+    });
+  }
+
+  it('copies an agent from a project to global, keeping the source', async () => {
+    await makeProjectAgent('mover');
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/transfer',
+      payload: { type: 'agents', name: 'mover', fromScopeId: projectId, toScopeId: 'global', mode: 'copy' },
+    });
+    expect(res.statusCode).toBe(200);
+    expect(fs.existsSync(path.join(claudeHome, 'agents', 'mover.md'))).toBe(true);
+    expect(fs.existsSync(path.join(projectsRoot, 'my-app', '.claude', 'agents', 'mover.md'))).toBe(true);
+  });
+
+  it('moves an agent (removes source) and gates a destination conflict', async () => {
+    await makeProjectAgent('mv2');
+    const move = await app.inject({
+      method: 'POST',
+      url: '/api/transfer',
+      payload: { type: 'agents', name: 'mv2', fromScopeId: projectId, toScopeId: 'global', mode: 'move' },
+    });
+    expect(move.statusCode).toBe(200);
+    expect(fs.existsSync(path.join(claudeHome, 'agents', 'mv2.md'))).toBe(true);
+    expect(fs.existsSync(path.join(projectsRoot, 'my-app', '.claude', 'agents', 'mv2.md'))).toBe(false);
+
+    // Re-create in the project; copying to global now conflicts.
+    await makeProjectAgent('mv2', '# changed');
+    const conflict = await app.inject({
+      method: 'POST',
+      url: '/api/transfer',
+      payload: { type: 'agents', name: 'mv2', fromScopeId: projectId, toScopeId: 'global', mode: 'copy' },
+    });
+    expect(conflict.statusCode).toBe(409);
+    expect(conflict.json().code).toBe('CONFIRM_REQUIRED');
+
+    const overwrite = await app.inject({
+      method: 'POST',
+      url: '/api/transfer',
+      payload: { type: 'agents', name: 'mv2', fromScopeId: projectId, toScopeId: 'global', mode: 'copy', confirm: true },
+    });
+    expect(overwrite.statusCode).toBe(200);
+    expect(fs.readFileSync(path.join(claudeHome, 'agents', 'mv2.md'), 'utf8')).toContain('# changed');
+  });
+
+  it('rejects a transfer to the same scope', async () => {
+    await makeProjectAgent('same');
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/transfer',
+      payload: { type: 'agents', name: 'same', fromScopeId: projectId, toScopeId: projectId, mode: 'copy' },
+    });
+    expect(res.statusCode).toBe(400);
+  });
 });

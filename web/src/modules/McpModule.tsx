@@ -10,6 +10,7 @@ import { Badge, Button, Card, Field, Input, Switch, Spinner, EmptyState, Segment
 import { PageHeader } from '../components/Editor';
 import { Modal, ConfirmDialog } from '../components/Dialog';
 import { KeyValueEditor } from '../components/KeyValueEditor';
+import { TransferButton } from '../components/TransferButton';
 
 type Prefill = { id: string } & McpInstall;
 
@@ -78,6 +79,7 @@ export function McpModule() {
                   {s.transport === 'stdio' ? `${s.command} ${(s.args ?? []).join(' ')}` : s.url}
                 </div>
               </div>
+              <TransferButton type="mcp" label={s.id} identity={{ id: s.id }} fromScopeId={scopeId} />
               <button onClick={() => setEditing(s)} className="rounded-sm p-1.5 text-ink-subtle hover:bg-clay-soft hover:text-clay" aria-label="Edit"><Pencil className="h-4 w-4" /></button>
               <button onClick={() => setConfirmDel(s.id)} className="rounded-sm p-1.5 text-ink-subtle hover:bg-danger-soft hover:text-danger" aria-label="Delete"><Trash2 className="h-4 w-4" /></button>
             </Card>
