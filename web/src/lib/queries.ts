@@ -25,6 +25,9 @@ import type {
   PluginRegistrySearchResponse,
   TransferRequest,
   TransferResult,
+  SkillImportRequest,
+  SkillImportPreview,
+  SkillImportResult,
 } from '@ccm/shared';
 import { api, qk, scopeUrl } from './api';
 
@@ -345,5 +348,21 @@ export function useTransfer() {
     mutationFn: (req: TransferRequest) => api.post<TransferResult>('/api/transfer', req),
     // A transfer touches two scopes' lists; refresh everything.
     onSuccess: () => void qc.invalidateQueries(),
+  });
+}
+
+// --- skill import (.skill upload) ---
+
+export function useImportSkill(scopeId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (req: SkillImportRequest) =>
+      api.post<SkillImportPreview | SkillImportResult>(scopeUrl(scopeId, '/skills/import'), req),
+    onSuccess: (_res, req) => {
+      if (req.dryRun) return; // preview only — nothing changed
+      void qc.invalidateQueries({ queryKey: qk.list(scopeId, 'skills') });
+      void qc.invalidateQueries({ queryKey: qk.scopes });
+      void qc.invalidateQueries({ queryKey: qk.scope(scopeId) });
+    },
   });
 }

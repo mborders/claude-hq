@@ -8,11 +8,13 @@ import type {
   ValidateResponse,
   RuntimeSummary,
   TreeEntry,
+  SkillImportRequest,
 } from '@ccm/shared';
 import type { AppContext } from '../context';
 import type { ResolvedScope } from '../domain/paths';
 import { createServices } from '../services';
 import { TransferService } from '../services/transferService';
+import { SkillImportService } from '../services/skillImportService';
 import { validate } from '../schemas';
 import { parseFrontmatter } from '../fs/frontmatter';
 import { readText } from '../fs/safeFs';
@@ -46,6 +48,7 @@ function isTrue(v: string | undefined): boolean {
 export function apiRoutes(ctx: AppContext): FastifyPluginAsync {
   const s = createServices(ctx);
   const transfers = new TransferService(ctx);
+  const skillImport = new SkillImportService(ctx);
   const requireScope = (id: string) => s.scopes.requireScope(id);
 
   return async (app) => {
@@ -157,6 +160,15 @@ export function apiRoutes(ctx: AppContext): FastifyPluginAsync {
         confirm: isTrue(q(req, 'confirm')),
         expectedSha256: q(req, 'expectedSha256'),
       });
+    });
+
+    // --- skill import (.skill / .zip upload) ---
+    app.post('/scopes/:scopeId/skills/import', async (req) => {
+      const scope = requireScope((req.params as any).scopeId);
+      const body = req.body as SkillImportRequest;
+      const buf = Buffer.from(body.dataBase64 ?? '', 'base64');
+      if (body.dryRun) return skillImport.inspect(scope, buf, body.name);
+      return skillImport.import(scope, buf, { name: body.name, confirm: body.confirm });
     });
 
     // --- mcp ---

@@ -15,6 +15,7 @@ import {
   stringifyFrontmatter,
   type FrontmatterDoc,
 } from '../fs/frontmatter';
+import { removeDirSafe, lstatSafe } from '../fs/safeFs';
 import { configRel, type ResolvedScope } from '../domain/paths';
 import { validate } from '../schemas';
 import { AppError } from '../http/appError';
@@ -154,14 +155,23 @@ export class ArtifactService {
     });
   }
 
-  delete(scope: ResolvedScope, type: ArtifactType, name: string, opts: { expectedSha256?: string; confirm?: boolean }): Promise<{ backup?: WriteResult['backup'] }> {
+  async delete(scope: ResolvedScope, type: ArtifactType, name: string, opts: { expectedSha256?: string; confirm?: boolean }): Promise<{ backup?: WriteResult['backup'] }> {
     assertName(name);
     const rel = relFor(scope, type, name);
-    return this.ctx.files.delete(scope, rel, {
+    // A skill is a whole directory. Refuse to act through a symlinked skill dir
+    // (don't delete its target), then remove the folder after its SKILL.md.
+    const skillDir = type === 'skills' ? path.join(scope.rootDir, configRel(scope, `skills/${name}`)) : null;
+    if (skillDir && lstatSafe(skillDir)?.isSymbolicLink()) {
+      throw new AppError('FORBIDDEN_PATH', `Skill "${name}" is a symlink; refusing to delete through it.`);
+    }
+    const result = await this.ctx.files.delete(scope, rel, {
       warnings: [`Delete ${type.slice(0, -1)} "${name}"?`],
       ...(opts.confirm !== undefined ? { confirm: opts.confirm } : {}),
       ...(opts.expectedSha256 !== undefined ? { expectedSha256: opts.expectedSha256 } : {}),
     });
+    // Clean up the rest of the folder (references/, examples/, scripts, …).
+    if (skillDir) removeDirSafe(skillDir);
+    return result;
   }
 
   /** Build file content, reusing the existing frontmatter block when it is unchanged. */

@@ -71,6 +71,33 @@ export interface UpsertArtifactRequest {
   confirm?: boolean;
 }
 
+// --- skill import (.skill / .zip upload) ---
+
+export interface SkillImportRequest {
+  /** base64-encoded .skill (zip) archive. */
+  dataBase64: string;
+  /** When true, parse + validate and return a preview without writing. */
+  dryRun?: boolean;
+  /** Override the skill name (defaults to the archive's frontmatter name / folder). */
+  name?: string;
+  /** Required to overwrite an existing skill of the same name. */
+  confirm?: boolean;
+}
+
+export interface SkillImportPreview {
+  name: string;
+  description: string;
+  files: { path: string; bytes: number }[];
+  totalBytes: number;
+  wouldOverwrite: boolean;
+}
+
+export interface SkillImportResult {
+  name: string;
+  files: string[];
+  fileCount: number;
+}
+
 // --- mcp ---
 
 export interface McpListResponse {

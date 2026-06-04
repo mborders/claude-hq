@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
-import { Bot, SquareSlash, Sparkles, Plus, Trash2, ChevronRight, FileText, CheckSquare } from 'lucide-react';
+import { Bot, SquareSlash, Sparkles, Plus, Trash2, ChevronRight, FileText, CheckSquare, Upload } from 'lucide-react';
 import type { ArtifactType, Subagent, SlashCommand, Skill } from '@ccm/shared';
 import { useArtifact, useArtifacts, useDeleteArtifact, useUpsertArtifact } from '../lib/queries';
 import { ApiClientError } from '../lib/api';
@@ -11,6 +11,7 @@ import { PageHeader, EditorFrame } from '../components/Editor';
 import { ConfirmDialog } from '../components/Dialog';
 import { TransferButton, BulkTransferDialog } from '../components/TransferButton';
 import { useMultiSelect, BulkActionBar, RowCheckbox } from '../components/MultiSelect';
+import { ImportSkillModal } from '../components/ImportSkillModal';
 import { CodeMirror, type CodeIssue } from '../components/CodeMirror';
 import { cn } from '../lib/cn';
 
@@ -37,6 +38,7 @@ function ArtifactList({ type }: { type: ArtifactType }) {
   const items = data?.items ?? [];
   const sel = useMultiSelect();
   const [bulkOpen, setBulkOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
 
   return (
     <div className="mx-auto max-w-3xl">
@@ -50,12 +52,18 @@ function ArtifactList({ type }: { type: ArtifactType }) {
                 <CheckSquare className="h-4 w-4" /> Select
               </Button>
             )}
+            {type === 'skills' && !sel.selecting && (
+              <Button variant="secondary" onClick={() => setImportOpen(true)}>
+                <Upload className="h-4 w-4" /> Import
+              </Button>
+            )}
             <Button variant="primary" onClick={goNew}>
               <Plus className="h-4 w-4" /> New {meta.singular}
             </Button>
           </div>
         }
       />
+      {type === 'skills' && <ImportSkillModal scopeId={scopeId} open={importOpen} onOpenChange={setImportOpen} />}
       <div className="px-6 py-5">
         {isLoading && <div className="flex justify-center py-10"><Spinner /></div>}
         {!isLoading && items.length === 0 && (

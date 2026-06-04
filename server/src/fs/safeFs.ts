@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
+import { AppError } from '../http/appError';
 
 export interface FileStat {
   size: number;
@@ -101,6 +102,28 @@ export function removeFile(absPath: string): void {
   } catch (err) {
     if ((err as NodeJS.ErrnoException).code !== 'ENOENT') throw err;
   }
+}
+
+export function lstatSafe(absPath: string): fs.Stats | null {
+  try {
+    return fs.lstatSync(absPath);
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Recursively remove a directory, refusing when the path itself is a symlink.
+ * Pass the LITERAL (non-realpathed) path: a planted `skills/x -> elsewhere`
+ * symlink must not let a recursive delete follow through onto its target.
+ */
+export function removeDirSafe(literalAbsPath: string): void {
+  const st = lstatSafe(literalAbsPath);
+  if (!st) return; // nothing there
+  if (st.isSymbolicLink()) {
+    throw new AppError('FORBIDDEN_PATH', `Refusing to remove a symlinked path: ${literalAbsPath}`);
+  }
+  fs.rmSync(literalAbsPath, { recursive: true, force: true });
 }
 
 export function fileExists(absPath: string): boolean {

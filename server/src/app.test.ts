@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { zipSync, strToU8 } from 'fflate';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -377,5 +378,52 @@ describe('plugins: global inheritance', () => {
     await app.inject({ method: 'DELETE', url: `/api/scopes/${projectId}/marketplaces/zz?confirm=true` });
     local = JSON.parse(fs.readFileSync(localPath, 'utf8'));
     expect(local.extraKnownMarketplaces).toBeUndefined();
+  });
+});
+
+describe('skill import (.skill upload)', () => {
+  const SKILL_MD = `---\nname: imported\ndescription: An imported skill for the test.\n---\n\n# Imported\n`;
+  const b64 = () =>
+    Buffer.from(zipSync({ 'SKILL.md': strToU8(SKILL_MD), 'ref.md': strToU8('r') })).toString('base64');
+
+  it('previews (dry run) then imports a .skill into the global scope', async () => {
+    const preview = await app.inject({
+      method: 'POST',
+      url: '/api/scopes/global/skills/import',
+      payload: { dataBase64: b64(), dryRun: true },
+    });
+    expect(preview.statusCode).toBe(200);
+    expect(preview.json()).toMatchObject({ name: 'imported', wouldOverwrite: false });
+    expect(fs.existsSync(path.join(claudeHome, 'skills', 'imported'))).toBe(false); // dry run wrote nothing
+
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/scopes/global/skills/import',
+      payload: { dataBase64: b64() },
+    });
+    expect(res.statusCode).toBe(200);
+    expect(res.json()).toMatchObject({ name: 'imported', fileCount: 2 });
+    expect(fs.readFileSync(path.join(claudeHome, 'skills', 'imported', 'SKILL.md'), 'utf8')).toContain('name: imported');
+    expect(fs.existsSync(path.join(claudeHome, 'skills', 'imported', 'ref.md'))).toBe(true);
+  });
+
+  it('rejects a malformed archive with 400', async () => {
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/scopes/global/skills/import',
+      payload: { dataBase64: Buffer.from('not a zip at all').toString('base64') },
+    });
+    expect(res.statusCode).toBe(400);
+  });
+
+  it('deleting a skill removes the whole skill directory, not just SKILL.md', async () => {
+    const dir = path.join(claudeHome, 'skills', 'multi');
+    fs.mkdirSync(path.join(dir, 'references'), { recursive: true });
+    fs.writeFileSync(path.join(dir, 'SKILL.md'), '---\nname: multi\ndescription: A multi-file skill.\n---\nbody\n');
+    fs.writeFileSync(path.join(dir, 'references', 'r.md'), 'reference');
+
+    const res = await app.inject({ method: 'DELETE', url: '/api/scopes/global/skills/multi?confirm=true' });
+    expect(res.statusCode).toBe(200);
+    expect(fs.existsSync(dir)).toBe(false); // whole folder gone, not just SKILL.md
   });
 });
