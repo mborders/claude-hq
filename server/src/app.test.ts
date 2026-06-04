@@ -309,6 +309,28 @@ describe('API integration', () => {
     });
     expect(res.statusCode).toBe(400);
   });
+
+  it('refuses to transfer onto a symlinked destination skill dir without following it', async () => {
+    // Source skill in global.
+    const src = path.join(claudeHome, 'skills', 'portme');
+    fs.mkdirSync(src, { recursive: true });
+    fs.writeFileSync(path.join(src, 'SKILL.md'), '---\nname: portme\ndescription: A portable skill.\n---\n');
+    // Destination: plant my-app/.claude/skills/portme -> a sibling dir holding real data.
+    const proj = path.join(projectsRoot, 'my-app');
+    const target = path.join(proj, 'sensitive');
+    fs.mkdirSync(target, { recursive: true });
+    fs.writeFileSync(path.join(target, 'keep.txt'), 'important');
+    fs.mkdirSync(path.join(proj, '.claude', 'skills'), { recursive: true });
+    fs.symlinkSync(target, path.join(proj, '.claude', 'skills', 'portme'));
+
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/transfer',
+      payload: { type: 'skills', name: 'portme', fromScopeId: 'global', toScopeId: projectId, mode: 'copy', confirm: true },
+    });
+    expect(res.statusCode).toBe(403); // FORBIDDEN_PATH — symlinked dest refused
+    expect(fs.readFileSync(path.join(target, 'keep.txt'), 'utf8')).toBe('important'); // target untouched
+  });
 });
 
 describe('plugins: global inheritance', () => {

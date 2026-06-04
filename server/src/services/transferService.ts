@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import type { TransferRequest, TransferResult, McpServer, HookRow } from '@ccm/shared';
 import { configRel, type ResolvedScope } from '../domain/paths';
+import { lstatSafe, removeDirSafe } from '../fs/safeFs';
 import { AppError } from '../http/appError';
 import type { AppContext } from '../context';
 import { ScopeService } from './scopeService';
@@ -86,9 +87,16 @@ export class TransferService {
     const toDirRel = configRel(to, `skills/${name}`);
     const fromAbs = this.ctx.sandbox.resolve(from.rootDir, fromDirRel);
     const toAbs = this.ctx.sandbox.resolve(to.rootDir, toDirRel);
+    // Literal (non-realpathed) dirs for symlink-safe removal: a planted
+    // skills/<name> symlink must not redirect the rmSync/copy onto its target.
+    const fromLiteral = path.join(from.rootDir, fromDirRel);
+    const toLiteral = path.join(to.rootDir, toDirRel);
 
     if (!fs.existsSync(path.join(fromAbs, 'SKILL.md'))) {
       throw new AppError('NOT_FOUND', `Skill not found: ${name}`);
+    }
+    if (lstatSafe(toLiteral)?.isSymbolicLink()) {
+      throw new AppError('FORBIDDEN_PATH', `Destination skill "${name}" is a symlink in ${to.label}; refusing to overwrite it.`);
     }
     if (fs.existsSync(toAbs) && !req.confirm) {
       throw new AppError('CONFIRM_REQUIRED', `Skill "${name}" already exists in ${to.label}.`, {
@@ -96,12 +104,12 @@ export class TransferService {
       });
     }
     this.ensureClaudeDir(to);
-    fs.rmSync(toAbs, { recursive: true, force: true }); // clean replace
+    removeDirSafe(toLiteral); // clean replace (refuses to follow a symlink)
     copyDir(fromAbs, toAbs);
 
     let removedFromSource = false;
     if (req.mode === 'move') {
-      fs.rmSync(fromAbs, { recursive: true, force: true });
+      removeDirSafe(fromLiteral);
       removedFromSource = true;
     }
     return { ok: true, destRelPath: `${toDirRel}/SKILL.md`, removedFromSource };
