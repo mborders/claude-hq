@@ -28,6 +28,8 @@ import type {
   SkillImportRequest,
   SkillImportPreview,
   SkillImportResult,
+  TreeResponse,
+  FileMeta,
 } from '@ccm/shared';
 import { api, qk, scopeUrl } from './api';
 
@@ -348,6 +350,25 @@ export function useTransfer() {
     mutationFn: (req: TransferRequest) => api.post<TransferResult>('/api/transfer', req),
     // A transfer touches two scopes' lists; refresh everything.
     onSuccess: () => void qc.invalidateQueries(),
+  });
+}
+
+// --- file tree + raw read (skill supporting files) ---
+
+export function useTree(scopeId: string, subdir: string, recursive = false, enabled = true) {
+  return useQuery({
+    queryKey: ['tree', scopeId, subdir, recursive],
+    enabled: enabled && !!subdir,
+    queryFn: () =>
+      api.get<TreeResponse>(scopeUrl(scopeId, `/tree?subdir=${enc(subdir)}&recursive=${recursive}`)),
+  });
+}
+
+export function useRawFile(scopeId: string, relPath: string, enabled = true) {
+  return useQuery({
+    queryKey: ['raw', scopeId, relPath],
+    enabled: enabled && !!relPath,
+    queryFn: () => api.get<{ meta: FileMeta; raw: string }>(scopeUrl(scopeId, `/raw?relPath=${enc(relPath)}`)),
   });
 }
 

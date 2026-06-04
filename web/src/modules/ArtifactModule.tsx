@@ -12,6 +12,7 @@ import { ConfirmDialog } from '../components/Dialog';
 import { TransferButton, BulkTransferDialog } from '../components/TransferButton';
 import { useMultiSelect, BulkActionBar, RowCheckbox } from '../components/MultiSelect';
 import { ImportSkillModal } from '../components/ImportSkillModal';
+import { SkillFilesPanel } from '../components/SkillFiles';
 import { CodeMirror, type CodeIssue } from '../components/CodeMirror';
 import { cn } from '../lib/cn';
 
@@ -159,6 +160,8 @@ function ArtifactEditor({ type, name, create }: { type: ArtifactType; name?: str
   const navigate = useNavigate();
   const meta = META[type];
   const loaded = useArtifact(scopeId, type, name ?? '', !create && !!name);
+  const skillDir =
+    type === 'skills' && !create ? ((loaded.data?.structured as Skill | undefined)?.dir ?? null) : null;
   const upsert = useUpsertArtifact(scopeId, type);
   const del = useDeleteArtifact(scopeId, type);
 
@@ -340,6 +343,7 @@ function ArtifactEditor({ type, name, create }: { type: ArtifactType; name?: str
               <Field label={meta.bodyLabel} hint={meta.bodyHint}>
                 <CodeMirror value={body} language="markdown" onChange={setBody} diagnostics={issues} minHeight="320px" />
               </Field>
+              {skillDir && <SkillFilesPanel scopeId={scopeId} skillDir={skillDir} />}
             </div>
           )}
         </div>

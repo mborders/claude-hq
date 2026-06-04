@@ -272,7 +272,7 @@ export function apiRoutes(ctx: AppContext): FastifyPluginAsync {
     });
     app.get('/scopes/:scopeId/tree', async (req) => {
       const scope = requireScope((req.params as any).scopeId);
-      return { entries: listTree(ctx, scope, q(req, 'subdir')) };
+      return { entries: listTree(ctx, scope, q(req, 'subdir'), isTrue(q(req, 'recursive'))) };
     });
 
     // --- runtime summary (global, read-only) ---
@@ -338,7 +338,7 @@ function assertRawParsable(relPath: string, raw: string): void {
   }
 }
 
-function listTree(ctx: AppContext, scope: ResolvedScope, subdir?: string): TreeEntry[] {
+function listTree(ctx: AppContext, scope: ResolvedScope, subdir?: string, recursive = false): TreeEntry[] {
   const rel = subdir ?? scope.configSubdir ?? '';
   let dirAbs: string;
   try {
@@ -346,32 +346,47 @@ function listTree(ctx: AppContext, scope: ResolvedScope, subdir?: string): TreeE
   } catch {
     return [];
   }
-  let entries: fs.Dirent[];
-  try {
-    entries = fs.readdirSync(dirAbs, { withFileTypes: true });
-  } catch {
-    return [];
-  }
+
   const out: TreeEntry[] = [];
-  for (const e of entries) {
-    const entryRel = rel ? `${rel}/${e.name}` : e.name;
-    let size = 0;
-    let mtimeMs = 0;
+  const MAX_ENTRIES = 2000;
+  const MAX_DEPTH = 8;
+
+  const walk = (curRel: string, curAbs: string, depth: number): void => {
+    let entries: fs.Dirent[];
     try {
-      const st = fs.statSync(path.join(dirAbs, e.name));
-      size = st.size;
-      mtimeMs = st.mtimeMs;
+      entries = fs.readdirSync(curAbs, { withFileTypes: true });
     } catch {
-      /* ignore */
+      return;
     }
-    out.push({
-      relPath: entryRel,
-      type: e.isDirectory() ? 'dir' : 'file',
-      size,
-      mtimeMs,
-      readOnly: ctx.files.isReadOnly(scope, entryRel),
-    });
-  }
+    for (const e of entries) {
+      if (out.length >= MAX_ENTRIES) return;
+      const entryRel = curRel ? `${curRel}/${e.name}` : e.name;
+      // withFileTypes uses lstat: a symlink reports isDirectory()===false, so we
+      // list it as a leaf and never recurse through it (no symlink-follow / cycles).
+      const isDir = e.isDirectory();
+      let size = 0;
+      let mtimeMs = 0;
+      try {
+        const st = fs.statSync(path.join(curAbs, e.name));
+        size = st.size;
+        mtimeMs = st.mtimeMs;
+      } catch {
+        /* ignore */
+      }
+      out.push({
+        relPath: entryRel,
+        type: isDir ? 'dir' : 'file',
+        size,
+        mtimeMs,
+        readOnly: ctx.files.isReadOnly(scope, entryRel),
+      });
+      if (recursive && isDir && depth < MAX_DEPTH) {
+        walk(entryRel, path.join(curAbs, e.name), depth + 1);
+      }
+    }
+  };
+
+  walk(rel, dirAbs, 0);
   out.sort((a, b) => (a.type === b.type ? a.relPath.localeCompare(b.relPath) : a.type === 'dir' ? -1 : 1));
   return out;
 }

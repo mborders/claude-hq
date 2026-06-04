@@ -427,3 +427,37 @@ describe('skill import (.skill upload)', () => {
     expect(fs.existsSync(dir)).toBe(false); // whole folder gone, not just SKILL.md
   });
 });
+
+describe('tree listing', () => {
+  it('lists a folder recursively without following symlinked dirs', async () => {
+    const skillDir = path.join(claudeHome, 'skills', 'nested');
+    fs.mkdirSync(path.join(skillDir, 'references'), { recursive: true });
+    fs.writeFileSync(path.join(skillDir, 'SKILL.md'), '---\nname: nested\ndescription: x\n---\n');
+    fs.writeFileSync(path.join(skillDir, 'references', 'a.md'), 'a');
+    fs.writeFileSync(path.join(skillDir, 'references', 'b.md'), 'b');
+    // a symlinked dir pointing elsewhere must NOT be walked into
+    const outside = path.join(claudeHome, 'outside');
+    fs.mkdirSync(outside, { recursive: true });
+    fs.writeFileSync(path.join(outside, 'secret.md'), 's');
+    fs.symlinkSync(outside, path.join(skillDir, 'linkdir'));
+
+    const res = await app.inject({ method: 'GET', url: '/api/scopes/global/tree?subdir=skills/nested&recursive=true' });
+    expect(res.statusCode).toBe(200);
+    const paths = res.json().entries.map((e: { relPath: string }) => e.relPath);
+    expect(paths).toContain('skills/nested/references/a.md');
+    expect(paths).toContain('skills/nested/references/b.md');
+    expect(paths.some((p: string) => p.endsWith('secret.md'))).toBe(false); // symlink target not walked
+  });
+
+  it('lists only the top level when not recursive', async () => {
+    const skillDir = path.join(claudeHome, 'skills', 'flat');
+    fs.mkdirSync(path.join(skillDir, 'references'), { recursive: true });
+    fs.writeFileSync(path.join(skillDir, 'SKILL.md'), '---\nname: flat\ndescription: x\n---\n');
+    fs.writeFileSync(path.join(skillDir, 'references', 'a.md'), 'a');
+
+    const res = await app.inject({ method: 'GET', url: '/api/scopes/global/tree?subdir=skills/flat' });
+    const paths = res.json().entries.map((e: { relPath: string }) => e.relPath);
+    expect(paths).toContain('skills/flat/references'); // the dir entry
+    expect(paths).not.toContain('skills/flat/references/a.md'); // not recursed
+  });
+});
