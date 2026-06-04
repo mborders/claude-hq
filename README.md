@@ -1,4 +1,4 @@
-# Claude Config Manager
+# Claude Control
 
 A sleek, local web tool for managing your **Claude Code** configuration — both the
 global user config (`~/.claude/`) and per-project config (`<project>/.claude/`) —
@@ -36,7 +36,7 @@ automatic backups, and validation before every write.
 Requirements: Docker + Docker Compose.
 
 ```bash
-git clone <this-repo> && cd claude-config-manager
+git clone <this-repo> && cd claude-control
 
 # One-time: seed your host UID/GID into .env (so files stay owned by you) and
 # create the app-data directory. (make setup does this for you.)
@@ -95,7 +95,7 @@ npm run build      # production build (web/dist + server/dist/server.cjs)
 ## How it works
 
 ```
-claude-config-manager/
+claude-control/
 ├── shared/   @ccm/shared — TypeScript wire contract (types + permission helpers)
 ├── server/   @ccm/server — Fastify API + static SPA host (bundled to one .cjs)
 └── web/      @ccm/web    — React + Vite SPA

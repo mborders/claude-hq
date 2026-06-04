@@ -37,7 +37,7 @@ export function ScopeSidebar() {
           <span className="font-display text-sm font-semibold">C</span>
         </div>
         <div className="leading-tight">
-          <div className="font-display text-[15px] font-semibold text-ink">Claude Config</div>
+          <div className="font-display text-[15px] font-semibold text-ink">Claude Control</div>
           <div className="text-[11px] text-ink-subtle">manager</div>
         </div>
       </div>

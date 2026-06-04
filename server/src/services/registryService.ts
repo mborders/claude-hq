@@ -47,7 +47,7 @@ async function fetchJson(url: string, timeoutMs = 8000): Promise<unknown> {
   try {
     const res = await fetch(url, {
       signal: ctrl.signal,
-      headers: { accept: 'application/json', 'user-agent': 'claude-config-manager' },
+      headers: { accept: 'application/json', 'user-agent': 'claude-control' },
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     return await res.json();

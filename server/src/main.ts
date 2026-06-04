@@ -22,7 +22,7 @@ async function main(): Promise<void> {
     await app.listen({ port: env.port, host: env.host });
     app.log.info(
       { claudeHome: env.claudeHomeDir, projectsRoots: env.projectsRoots, readOnly: env.readOnly },
-      `Claude Config Manager listening on http://${env.host}:${env.port}`,
+      `Claude Control listening on http://${env.host}:${env.port}`,
     );
   } catch (err) {
     app.log.error(err);
