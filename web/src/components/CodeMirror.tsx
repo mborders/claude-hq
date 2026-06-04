@@ -56,6 +56,7 @@ export function CodeMirror({
   placeholder,
   className,
   minHeight = '200px',
+  maxHeight,
 }: {
   value: string;
   language: 'json' | 'markdown';
@@ -65,6 +66,8 @@ export function CodeMirror({
   placeholder?: string;
   className?: string;
   minHeight?: string;
+  /** When set, the editor caps at this height and scrolls internally instead of growing. */
+  maxHeight?: string;
 }) {
   const host = useRef<HTMLDivElement>(null);
   const view = useRef<EditorView | null>(null);
@@ -89,6 +92,7 @@ export function CodeMirror({
         syntaxHighlighting(warmHighlight),
         keymap.of([...defaultKeymap, ...historyKeymap, indentWithTab]),
         warmTheme,
+        maxHeight ? EditorView.theme({ '&': { maxHeight }, '.cm-scroller': { overflow: 'auto' } }) : [],
         EditorView.lineWrapping,
         langCompartment.of(language === 'json' ? json() : markdown()),
         editableCompartment.of(EditorView.editable.of(!readOnly)),

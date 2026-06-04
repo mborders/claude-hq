@@ -341,7 +341,14 @@ function ArtifactEditor({ type, name, create }: { type: ArtifactType; name?: str
                 </Field>
               )}
               <Field label={meta.bodyLabel} hint={meta.bodyHint}>
-                <CodeMirror value={body} language="markdown" onChange={setBody} diagnostics={issues} minHeight="320px" />
+                <CodeMirror
+                  value={body}
+                  language="markdown"
+                  onChange={setBody}
+                  diagnostics={issues}
+                  minHeight="320px"
+                  maxHeight={type === 'skills' ? '55vh' : undefined}
+                />
               </Field>
               {skillDir && <SkillFilesPanel scopeId={scopeId} skillDir={skillDir} />}
             </div>
