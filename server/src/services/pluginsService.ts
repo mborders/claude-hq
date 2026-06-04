@@ -7,7 +7,8 @@ import type {
   PluginInstallEntry,
 } from '@ccm/shared';
 import { readText } from '../fs/safeFs';
-import { type ResolvedScope } from '../domain/paths';
+import { resolveScope, type ResolvedScope } from '../domain/paths';
+import { GLOBAL_SCOPE_ID } from '../domain/scopeId';
 import type { AppContext } from '../context';
 import type { SettingsService } from './settingsService';
 
@@ -28,10 +29,18 @@ export class PluginsService {
   ) {}
 
   getPlugins(scope: ResolvedScope): PluginsResponse {
-    // enabled map + editable marketplaces come from this scope's settings file.
-    const effective = this.settings.getSettings(scope).effective;
-    const enabled = effective.enabledPlugins ?? {};
-    const extra = effective.extraKnownMarketplaces ?? {};
+    const isGlobal = scope.kind === 'global';
+    // The scope's OWN enabled map + editable marketplaces — what it sets itself
+    // (not inherited), matching where toggles/marketplace edits are written.
+    const own = this.settings.ownKnown(scope);
+    const localEnabled = own.enabledPlugins ?? {};
+    const extra = own.extraKnownMarketplaces ?? {};
+
+    // The user/global config applies to every project. A plugin enabled there is
+    // active in this scope unless the scope explicitly overrides it. Read it once.
+    const globalEnabled: Record<string, boolean> = isGlobal
+      ? localEnabled
+      : this.settings.ownKnown(resolveScope(GLOBAL_SCOPE_ID, this.ctx.env)).enabledPlugins ?? {};
 
     // installs + known marketplaces + blocklist live in the global plugins dir.
     const pluginsDir = path.join(this.ctx.env.claudeHomeDir, 'plugins');
@@ -42,14 +51,24 @@ export class PluginsService {
     const installsById: Record<string, PluginInstallEntry[]> =
       installedRaw && typeof installedRaw === 'object' ? installedRaw.plugins ?? {} : {};
 
-    const ids = new Set<string>([...Object.keys(enabled), ...Object.keys(installsById)]);
+    const ids = new Set<string>([
+      ...Object.keys(localEnabled),
+      ...Object.keys(globalEnabled),
+      ...Object.keys(installsById),
+    ]);
     const plugins: Plugin[] = [...ids].map((id) => {
       const [name, marketplace] = splitPluginId(id);
+      const localOverride = Object.prototype.hasOwnProperty.call(localEnabled, id);
+      const enabledGlobally = globalEnabled[id] === true;
+      // Project setting wins; otherwise inherit the global state.
+      const enabled = localOverride ? localEnabled[id] === true : enabledGlobally;
       return {
         id,
         name,
         marketplace,
-        enabled: enabled[id] ?? false,
+        enabled,
+        enabledGlobally: isGlobal ? enabled : enabledGlobally,
+        localOverride,
         installs: installsById[id] ?? [],
       };
     });

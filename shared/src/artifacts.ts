@@ -208,7 +208,12 @@ export interface Plugin {
   id: string;
   name: string;
   marketplace: string;
+  /** Effective: is this plugin active in the requested scope (a project setting overrides global)? */
   enabled: boolean;
+  /** Enabled in the global/user config — which applies to every project. */
+  enabledGlobally: boolean;
+  /** This scope has its own explicit enabledPlugins entry (rather than inheriting global). */
+  localOverride: boolean;
   installs: PluginInstallEntry[];
 }
 

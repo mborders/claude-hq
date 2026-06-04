@@ -183,7 +183,10 @@ export function apiRoutes(ctx: AppContext): FastifyPluginAsync {
     );
     app.put('/scopes/:scopeId/plugins/:pluginId/enabled', async (req) => {
       const { scopeId, pluginId } = req.params as any;
-      return s.settings.setEnabledPlugin(requireScope(scopeId), pluginId, !!(req.body as any).enabled);
+      const enabled = (req.body as any).enabled;
+      // null clears the scope's own entry (reverts to the inherited/global state).
+      if (enabled === null) return s.settings.removeEnabledPlugin(requireScope(scopeId), pluginId);
+      return s.settings.setEnabledPlugin(requireScope(scopeId), pluginId, !!enabled);
     });
     app.post('/scopes/:scopeId/marketplaces', async (req) => {
       const body = req.body as any;

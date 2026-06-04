@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { toast } from 'sonner';
-import { Plus, Trash2, Plug, Pencil, Eye, EyeOff, Sparkles, Search, ArrowDownToLine } from 'lucide-react';
+import { Plus, Trash2, Plug, Pencil, Eye, EyeOff, Sparkles, Search, ArrowDownToLine, CheckSquare } from 'lucide-react';
 import type { McpServer, McpRegistryEntry, McpInstall } from '@ccm/shared';
 import { useMcp, useUpsertMcp, useDeleteMcp, useMcpRegistrySearch } from '../lib/queries';
 import { useDebounce } from '../hooks/useDebounce';
@@ -10,7 +10,9 @@ import { Badge, Button, Card, Field, Input, Switch, Spinner, EmptyState, Segment
 import { PageHeader } from '../components/Editor';
 import { Modal, ConfirmDialog } from '../components/Dialog';
 import { KeyValueEditor } from '../components/KeyValueEditor';
-import { TransferButton } from '../components/TransferButton';
+import { TransferButton, BulkTransferDialog } from '../components/TransferButton';
+import { useMultiSelect, BulkActionBar, RowCheckbox } from '../components/MultiSelect';
+import { cn } from '../lib/cn';
 
 type Prefill = { id: string } & McpInstall;
 
@@ -24,6 +26,9 @@ export function McpModule() {
   const [prefill, setPrefill] = useState<Prefill | null>(null);
   const [registryOpen, setRegistryOpen] = useState(false);
   const [confirmDel, setConfirmDel] = useState<string | null>(null);
+  const servers = data?.servers ?? [];
+  const sel = useMultiSelect();
+  const [bulkOpen, setBulkOpen] = useState(false);
 
   const closeServerModal = () => {
     setAdding(false);
@@ -42,6 +47,11 @@ export function McpModule() {
               {reveal ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />} Reveal secrets
               <Switch checked={reveal} onCheckedChange={setReveal} />
             </label>
+            {servers.length > 0 && !sel.selecting && (
+              <Button variant="ghost" onClick={sel.start}>
+                <CheckSquare className="h-4 w-4" /> Select
+              </Button>
+            )}
             <Button variant="secondary" onClick={() => setRegistryOpen(true)}>
               <Sparkles className="h-4 w-4" /> Browse registry
             </Button>
@@ -66,26 +76,71 @@ export function McpModule() {
             }
           />
         )}
+        {sel.selecting && (
+          <div className="mb-3">
+            <BulkActionBar
+              count={sel.selected.size}
+              allSelected={servers.length > 0 && sel.selected.size === servers.length}
+              onToggleAll={() => sel.selectAll(servers.map((s) => s.id))}
+              onAction={() => setBulkOpen(true)}
+              onClear={sel.clear}
+            />
+          </div>
+        )}
         <div className="space-y-2">
-          {data?.servers.map((s) => (
-            <Card key={s.id} className="flex items-center gap-3 px-4 py-3">
-              <Plug className="h-4 w-4 shrink-0 text-ink-subtle" />
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2">
-                  <span className="truncate font-mono text-sm text-ink">{s.id}</span>
-                  <Badge tone={s.transport === 'stdio' ? 'info' : 'clay'}>{s.transport}</Badge>
+          {servers.map((s) => {
+            const checked = sel.selected.has(s.id);
+            const meta = (
+              <>
+                {sel.selecting && <RowCheckbox checked={checked} />}
+                <Plug className="h-4 w-4 shrink-0 text-ink-subtle" />
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2">
+                    <span className="truncate font-mono text-sm text-ink">{s.id}</span>
+                    <Badge tone={s.transport === 'stdio' ? 'info' : 'clay'}>{s.transport}</Badge>
+                  </div>
+                  <div className="truncate font-mono text-[11px] text-ink-subtle">
+                    {s.transport === 'stdio' ? `${s.command} ${(s.args ?? []).join(' ')}` : s.url}
+                  </div>
                 </div>
-                <div className="truncate font-mono text-[11px] text-ink-subtle">
-                  {s.transport === 'stdio' ? `${s.command} ${(s.args ?? []).join(' ')}` : s.url}
-                </div>
-              </div>
-              <TransferButton type="mcp" label={s.id} identity={{ id: s.id }} fromScopeId={scopeId} />
-              <button onClick={() => setEditing(s)} className="rounded-sm p-1.5 text-ink-subtle hover:bg-clay-soft hover:text-clay" aria-label="Edit"><Pencil className="h-4 w-4" /></button>
-              <button onClick={() => setConfirmDel(s.id)} className="rounded-sm p-1.5 text-ink-subtle hover:bg-danger-soft hover:text-danger" aria-label="Delete"><Trash2 className="h-4 w-4" /></button>
-            </Card>
-          ))}
+              </>
+            );
+            return sel.selecting ? (
+              <button
+                key={s.id}
+                onClick={() => sel.toggle(s.id)}
+                className={cn(
+                  'flex w-full items-center gap-3 rounded-lg border px-4 py-3 text-left transition-all',
+                  checked ? 'border-clay bg-clay-soft/40' : 'border-border hover:border-border-strong',
+                )}
+              >
+                {meta}
+              </button>
+            ) : (
+              <Card key={s.id} className="flex items-center gap-3 px-4 py-3">
+                {meta}
+                <TransferButton type="mcp" label={s.id} identity={{ id: s.id }} fromScopeId={scopeId} />
+                <button onClick={() => setEditing(s)} className="rounded-sm p-1.5 text-ink-subtle hover:bg-clay-soft hover:text-clay" aria-label="Edit"><Pencil className="h-4 w-4" /></button>
+                <button onClick={() => setConfirmDel(s.id)} className="rounded-sm p-1.5 text-ink-subtle hover:bg-danger-soft hover:text-danger" aria-label="Delete"><Trash2 className="h-4 w-4" /></button>
+              </Card>
+            );
+          })}
         </div>
       </div>
+
+      {bulkOpen && (
+        <BulkTransferDialog
+          type="mcp"
+          label="server"
+          fromScopeId={scopeId}
+          items={[...sel.selected].map((id) => ({ id }))}
+          onClose={() => setBulkOpen(false)}
+          onDone={() => {
+            setBulkOpen(false);
+            sel.clear();
+          }}
+        />
+      )}
 
       {(adding || editing || prefill) && (
         <McpServerModal

@@ -15,20 +15,57 @@ function hasMemory(projectPath: string): boolean {
   );
 }
 
+function readJsonSafe(absPath: string): Record<string, any> | null {
+  try {
+    return JSON.parse(fs.readFileSync(absPath, 'utf8'));
+  } catch {
+    return null;
+  }
+}
+
+/** Merge a project's settings.json + settings.local.json (local wins) for area detection. */
+function mergedSettings(claudeDir: string): Record<string, any> {
+  const base = readJsonSafe(path.join(claudeDir, 'settings.json')) ?? {};
+  const local = readJsonSafe(path.join(claudeDir, 'settings.local.json')) ?? {};
+  return { ...base, ...local };
+}
+
+const NON_GENERAL_KEYS = new Set([
+  'permissions',
+  'hooks',
+  'enabledPlugins',
+  'extraKnownMarketplaces',
+  'mcpServers',
+]);
+
+/** Count the distinct areas this project configures in its OWN .claude (project-card badge). */
 function countConfiguredModules(projectPath: string): number {
   const claudeDir = path.join(projectPath, '.claude');
-  const checks = [
-    path.join(claudeDir, 'settings.json'),
-    path.join(claudeDir, 'settings.local.json'),
-    path.join(claudeDir, 'agents'),
-    path.join(claudeDir, 'commands'),
-    path.join(claudeDir, 'skills'),
-    path.join(claudeDir, 'hooks'),
-    path.join(projectPath, '.mcp.json'),
+  const dirHasEntries = (p: string): boolean => {
+    try {
+      return fs.readdirSync(p).some((e) => !e.startsWith('.'));
+    } catch {
+      return false;
+    }
+  };
+  const s = mergedSettings(claudeDir);
+  const nonEmpty = (o: unknown): boolean => !!o && typeof o === 'object' && Object.keys(o).length > 0;
+  const perms = s.permissions ?? {};
+
+  const areas = [
+    dirHasEntries(path.join(claudeDir, 'agents')),
+    dirHasEntries(path.join(claudeDir, 'commands')),
+    dirHasEntries(path.join(claudeDir, 'skills')),
+    hasMemory(projectPath),
+    // MCP: project .mcp.json or mcpServers in settings.
+    fs.existsSync(path.join(projectPath, '.mcp.json')) || nonEmpty(s.mcpServers),
+    nonEmpty(s.hooks),
+    (perms.allow?.length ?? 0) + (perms.deny?.length ?? 0) + (perms.ask?.length ?? 0) > 0,
+    nonEmpty(s.enabledPlugins) || nonEmpty(s.extraKnownMarketplaces),
+    // "general" settings: any recognized config beyond the areas counted above.
+    Object.keys(s).some((k) => !NON_GENERAL_KEYS.has(k)),
   ];
-  let n = checks.reduce((acc, c) => acc + (fs.existsSync(c) ? 1 : 0), 0);
-  if (hasMemory(projectPath)) n += 1;
-  return n;
+  return areas.reduce((acc, present) => acc + (present ? 1 : 0), 0);
 }
 
 function toProjectRef(projectPath: string, source: 'scanned' | 'manual', scanRoot?: string): ProjectRef {

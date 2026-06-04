@@ -240,7 +240,8 @@ export function useDeleteMcp(scopeId: string) {
 export function useTogglePlugin(scopeId: string) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (input: { pluginId: string; enabled: boolean }) =>
+    // `enabled: null` clears this scope's override (reverts to the inherited/global state).
+    mutationFn: (input: { pluginId: string; enabled: boolean | null }) =>
       api.put<WriteResult>(scopeUrl(scopeId, `/plugins/${enc(input.pluginId)}/enabled`), {
         enabled: input.enabled,
       }),

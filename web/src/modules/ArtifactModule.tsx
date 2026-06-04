@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
-import { Bot, SquareSlash, Sparkles, Plus, Trash2, ChevronRight, FileText } from 'lucide-react';
+import { Bot, SquareSlash, Sparkles, Plus, Trash2, ChevronRight, FileText, CheckSquare } from 'lucide-react';
 import type { ArtifactType, Subagent, SlashCommand, Skill } from '@ccm/shared';
 import { useArtifact, useArtifacts, useDeleteArtifact, useUpsertArtifact } from '../lib/queries';
 import { ApiClientError } from '../lib/api';
@@ -9,8 +9,10 @@ import { splitFrontmatter, joinFrontmatter } from '../lib/frontmatter';
 import { Button, Card, Badge, Field, Input, Textarea, EmptyState, SegmentedControl, Spinner } from '../components/ui';
 import { PageHeader, EditorFrame } from '../components/Editor';
 import { ConfirmDialog } from '../components/Dialog';
-import { TransferButton } from '../components/TransferButton';
+import { TransferButton, BulkTransferDialog } from '../components/TransferButton';
+import { useMultiSelect, BulkActionBar, RowCheckbox } from '../components/MultiSelect';
 import { CodeMirror, type CodeIssue } from '../components/CodeMirror';
+import { cn } from '../lib/cn';
 
 const META: Record<ArtifactType, { singular: string; title: string; icon: typeof Bot; bodyLabel: string; bodyHint: string }> = {
   agents: { singular: 'subagent', title: 'Subagents', icon: Bot, bodyLabel: 'System prompt', bodyHint: 'The agent’s instructions (markdown).' },
@@ -32,6 +34,9 @@ function ArtifactList({ type }: { type: ArtifactType }) {
   const meta = META[type];
   const Icon = meta.icon;
   const goNew = () => navigate(`/scope/${scopeId}/${type}/new`);
+  const items = data?.items ?? [];
+  const sel = useMultiSelect();
+  const [bulkOpen, setBulkOpen] = useState(false);
 
   return (
     <div className="mx-auto max-w-3xl">
@@ -39,14 +44,21 @@ function ArtifactList({ type }: { type: ArtifactType }) {
         title={meta.title}
         subtitle={`Manage ${meta.singular}s for this scope.`}
         actions={
-          <Button variant="primary" onClick={goNew}>
-            <Plus className="h-4 w-4" /> New {meta.singular}
-          </Button>
+          <div className="flex items-center gap-2">
+            {items.length > 0 && !sel.selecting && (
+              <Button variant="ghost" onClick={sel.start}>
+                <CheckSquare className="h-4 w-4" /> Select
+              </Button>
+            )}
+            <Button variant="primary" onClick={goNew}>
+              <Plus className="h-4 w-4" /> New {meta.singular}
+            </Button>
+          </div>
         }
       />
       <div className="px-6 py-5">
         {isLoading && <div className="flex justify-center py-10"><Spinner /></div>}
-        {!isLoading && (data?.items.length ?? 0) === 0 && (
+        {!isLoading && items.length === 0 && (
           <EmptyState
             icon={<Icon className="h-8 w-8" />}
             title={`No ${meta.singular}s yet`}
@@ -58,10 +70,21 @@ function ArtifactList({ type }: { type: ArtifactType }) {
             }
           />
         )}
+        {sel.selecting && (
+          <BulkActionBar
+            count={sel.selected.size}
+            allSelected={items.length > 0 && sel.selected.size === items.length}
+            onToggleAll={() => sel.selectAll(items.map((i) => i.name))}
+            onAction={() => setBulkOpen(true)}
+            onClear={sel.clear}
+          />
+        )}
         <div className="space-y-2">
-          {data?.items.map((item) => (
-            <Link key={item.name} to={`/scope/${scopeId}/${type}/${encodeURIComponent(item.name)}`}>
-              <Card className="group flex items-center gap-3 px-4 py-3 transition-all hover:-translate-y-px hover:border-border-strong hover:shadow-sm">
+          {items.map((item) => {
+            const checked = sel.selected.has(item.name);
+            const body = (
+              <>
+                {sel.selecting && <RowCheckbox checked={checked} />}
                 <FileText className="h-4 w-4 shrink-0 text-ink-subtle" />
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
@@ -70,13 +93,49 @@ function ArtifactList({ type }: { type: ArtifactType }) {
                   </div>
                   {item.description && <p className="mt-0.5 line-clamp-1 text-sm text-ink-muted">{item.description}</p>}
                 </div>
-                <TransferButton type={type} label={item.name} identity={{ name: item.name }} fromScopeId={scopeId} />
-                <ChevronRight className="h-4 w-4 text-ink-subtle transition-transform group-hover:translate-x-0.5" />
-              </Card>
-            </Link>
-          ))}
+                {!sel.selecting && (
+                  <>
+                    <TransferButton type={type} label={item.name} identity={{ name: item.name }} fromScopeId={scopeId} />
+                    <ChevronRight className="h-4 w-4 text-ink-subtle transition-transform group-hover:translate-x-0.5" />
+                  </>
+                )}
+              </>
+            );
+            return sel.selecting ? (
+              <button
+                key={item.name}
+                onClick={() => sel.toggle(item.name)}
+                className={cn(
+                  'group flex w-full items-center gap-3 rounded-lg border px-4 py-3 text-left transition-all',
+                  checked ? 'border-clay bg-clay-soft/40' : 'border-border hover:border-border-strong',
+                )}
+              >
+                {body}
+              </button>
+            ) : (
+              <Link key={item.name} to={`/scope/${scopeId}/${type}/${encodeURIComponent(item.name)}`}>
+                <Card className="group flex items-center gap-3 px-4 py-3 transition-all hover:-translate-y-px hover:border-border-strong hover:shadow-sm">
+                  {body}
+                </Card>
+              </Link>
+            );
+          })}
         </div>
       </div>
+
+      {bulkOpen && (
+        <BulkTransferDialog
+          type={type}
+          label={meta.singular}
+          fromScopeId={scopeId}
+          items={[...sel.selected].map((name) => ({ name }))}
+          onClose={() => setBulkOpen(false)}
+          onDone={() => {
+            setBulkOpen(false);
+            sel.clear();
+          }}
+        />
+      )}
     </div>
   );
 }

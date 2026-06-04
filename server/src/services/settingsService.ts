@@ -112,6 +112,15 @@ export class SettingsService {
     }
   }
 
+  /**
+   * The scope's OWN settings (its settings.json + settings.local.json merged),
+   * excluding any inherited ancestor baseline. Use this to tell a scope's own
+   * config apart from what it merely inherits — and it matches where writes land.
+   */
+  ownKnown(scope: ResolvedScope): KnownSettings {
+    return { ...this.rawKnown(scope, 'settings'), ...this.rawKnown(scope, 'local') };
+  }
+
   private findInherited(scope: ResolvedScope): { path: string; known: KnownSettings } | null {
     if (scope.kind !== 'project') return null;
     let dir = path.dirname(scope.rootDir);
@@ -344,7 +353,8 @@ export class SettingsService {
       (data) => {
         const m = (data.extraKnownMarketplaces as Record<string, unknown>) ?? {};
         delete m[name];
-        data.extraKnownMarketplaces = m;
+        if (Object.keys(m).length === 0) delete data.extraKnownMarketplaces;
+        else data.extraKnownMarketplaces = m;
         return [`Remove marketplace "${name}"?`];
       },
       opts,

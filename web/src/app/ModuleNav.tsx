@@ -1,5 +1,13 @@
 import { NavLink, useParams } from 'react-router-dom';
-import { useArtifacts, useMcp, useScopes } from '../lib/queries';
+import {
+  useArtifacts,
+  useMcp,
+  useScopes,
+  useHooks,
+  usePlugins,
+  useMemoryList,
+  usePermissions,
+} from '../lib/queries';
 import { MODULES } from './modules';
 import { cn } from '../lib/cn';
 
@@ -8,11 +16,23 @@ function useCounts(scopeId: string) {
   const commands = useArtifacts(scopeId, 'commands');
   const skills = useArtifacts(scopeId, 'skills');
   const mcp = useMcp(scopeId);
+  const hooks = useHooks(scopeId);
+  const plugins = usePlugins(scopeId);
+  const memory = useMemoryList(scopeId);
+  const permissions = usePermissions(scopeId);
+  const perms = permissions.data?.structured;
   return {
     agents: agents.data?.items.length,
     commands: commands.data?.items.length,
     skills: skills.data?.items.length,
     mcp: mcp.data?.servers.length,
+    hooks: hooks.data?.rows.length,
+    // active (effective-enabled) plugins in this scope
+    plugins: plugins.data?.plugins.filter((p) => p.enabled).length,
+    memory: memory.data?.docs.length,
+    permissions: perms
+      ? (perms.allow?.length ?? 0) + (perms.deny?.length ?? 0) + (perms.ask?.length ?? 0)
+      : undefined,
   } as Record<string, number | undefined>;
 }
 

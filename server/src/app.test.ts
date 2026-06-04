@@ -309,3 +309,73 @@ describe('API integration', () => {
     expect(res.statusCode).toBe(400);
   });
 });
+
+describe('plugins: global inheritance', () => {
+  const PID = encodeURIComponent('frontend-design@official');
+  const find = (body: any) => body.plugins.find((x: any) => x.id === 'frontend-design@official');
+
+  it('shows a globally-enabled plugin as inherited (not a local override) in a project', async () => {
+    const body = (await app.inject({ method: 'GET', url: `/api/scopes/${projectId}/plugins` })).json();
+    expect(find(body)).toMatchObject({ enabled: true, enabledGlobally: true, localOverride: false });
+  });
+
+  it('shows the same plugin as a local entry in the global scope', async () => {
+    const body = (await app.inject({ method: 'GET', url: '/api/scopes/global/plugins' })).json();
+    expect(find(body)).toMatchObject({ enabled: true, enabledGlobally: true, localOverride: true });
+  });
+
+  it('does not treat an ancestor .claude entry as the project’s own override', async () => {
+    // A parent directory's .claude that also enables the plugin is an inherited
+    // baseline — it must NOT read as this project's own enabledPlugins entry
+    // (otherwise the "global" badge and the toggle's clear-override logic break).
+    fs.mkdirSync(path.join(projectsRoot, '.claude'), { recursive: true });
+    fs.writeFileSync(
+      path.join(projectsRoot, '.claude', 'settings.json'),
+      JSON.stringify({ enabledPlugins: { 'frontend-design@official': true } }, null, 2),
+    );
+    const body = (await app.inject({ method: 'GET', url: `/api/scopes/${projectId}/plugins` })).json();
+    expect(find(body)).toMatchObject({ enabled: true, localOverride: false });
+  });
+
+  it('disabling in a project writes an override and leaves global untouched', async () => {
+    await app.inject({ method: 'PUT', url: `/api/scopes/${projectId}/plugins/${PID}/enabled`, payload: { enabled: false } });
+
+    const proj = find((await app.inject({ method: 'GET', url: `/api/scopes/${projectId}/plugins` })).json());
+    expect(proj).toMatchObject({ enabled: false, enabledGlobally: true, localOverride: true });
+
+    const global = find((await app.inject({ method: 'GET', url: '/api/scopes/global/plugins' })).json());
+    expect(global.enabled).toBe(true);
+  });
+
+  it('clearing the override (enabled: null) reverts to the inherited global state', async () => {
+    await app.inject({ method: 'PUT', url: `/api/scopes/${projectId}/plugins/${PID}/enabled`, payload: { enabled: false } });
+    await app.inject({ method: 'PUT', url: `/api/scopes/${projectId}/plugins/${PID}/enabled`, payload: { enabled: null } });
+
+    const proj = find((await app.inject({ method: 'GET', url: `/api/scopes/${projectId}/plugins` })).json());
+    expect(proj).toMatchObject({ enabled: true, localOverride: false });
+
+    // The project's own settings no longer carries an enabledPlugins entry.
+    const local = JSON.parse(
+      fs.readFileSync(path.join(projectsRoot, 'my-app', '.claude', 'settings.local.json'), 'utf8'),
+    );
+    expect(local.enabledPlugins?.['frontend-design@official']).toBeUndefined();
+  });
+
+  it('counts configured areas (permissions + memory) for the project badge', async () => {
+    const scopes = (await app.inject({ method: 'GET', url: '/api/scopes' })).json();
+    const proj = scopes.projects.find((p: any) => p.name === 'my-app');
+    expect(proj.configuredModules).toBe(2);
+  });
+
+  it('adds then removes a custom marketplace, leaving no empty key behind', async () => {
+    const localPath = path.join(projectsRoot, 'my-app', '.claude', 'settings.local.json');
+
+    await app.inject({ method: 'POST', url: `/api/scopes/${projectId}/marketplaces`, payload: { name: 'zz', repo: 'octo/zz' } });
+    let local = JSON.parse(fs.readFileSync(localPath, 'utf8'));
+    expect(local.extraKnownMarketplaces.zz).toEqual({ source: { source: 'github', repo: 'octo/zz' } });
+
+    await app.inject({ method: 'DELETE', url: `/api/scopes/${projectId}/marketplaces/zz?confirm=true` });
+    local = JSON.parse(fs.readFileSync(localPath, 'utf8'));
+    expect(local.extraKnownMarketplaces).toBeUndefined();
+  });
+});
