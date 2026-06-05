@@ -45,7 +45,7 @@ and keeps its own config + backups in `~/.claude-control`. Everything is
 configurable:
 
 ```bash
-npx claude-ctl --port 9000 --projects ~/code
+npx claude-ctl --port 9000 --workspace ~/code
 npx claude-ctl --claude-home ~/.claude --read-only
 npx claude-ctl --help
 ```
@@ -54,7 +54,7 @@ npx claude-ctl --help
 |---|---|---|
 | `-p, --port <n>` | Port to listen on | `7878` |
 | `--host <addr>` | Interface to bind | `127.0.0.1` |
-| `--projects <paths>` | `:`-separated roots to scan | current directory |
+| `-w, --workspace <dir>` | Folder that holds your projects | current directory |
 | `--claude-home <dir>` | Your global `~/.claude` | `~/.claude` |
 | `--data-dir <dir>` | Where to keep config + backups | `~/.claude-control` |
 | `--read-only` | Refuse all writes (view-only) | off |

@@ -21,7 +21,7 @@ Usage
 Options
   -p, --port <n>          Port to listen on                  (default 7878)
       --host <addr>       Interface to bind                  (default 127.0.0.1)
-      --projects <paths>  "${path.delimiter}"-separated roots to scan    (default: current directory)
+  -w, --workspace <dir>   Folder that holds your projects    (default: current directory)
       --claude-home <dir> Your global ~/.claude directory    (default: ~/.claude)
       --data-dir <dir>    Where to keep config + backups     (default: ~/.claude-control)
       --read-only         Refuse all writes (view-only)
@@ -31,7 +31,7 @@ Options
 
 Examples
   npx claude-ctl
-  npx claude-ctl --port 9000 --projects ~/code
+  npx claude-ctl --port 9000 --workspace ~/code
   npx claude-ctl --claude-home ~/.claude --read-only
 `;
 
@@ -43,7 +43,8 @@ function parseArgs(argv) {
       case '-p':
       case '--port': opts.port = argv[++i]; break;
       case '--host': opts.host = argv[++i]; break;
-      case '--projects': opts.projects = argv[++i]; break;
+      case '-w':
+      case '--workspace': opts.workspace = argv[++i]; break;
       case '--claude-home': opts.claudeHome = argv[++i]; break;
       case '--data-dir': opts.dataDir = argv[++i]; break;
       case '--read-only': opts.readOnly = true; break;
@@ -81,7 +82,7 @@ env.NODE_ENV = env.NODE_ENV || 'production';
 env.HOST = host;
 env.PORT = String(port);
 env.WEB_DIST_DIR = webDist;
-env.PROJECTS_ROOTS = opts.projects || env.PROJECTS_ROOTS || process.cwd();
+env.PROJECTS_ROOTS = opts.workspace || env.PROJECTS_ROOTS || process.cwd();
 env.CLAUDE_HOME_DIR = opts.claudeHome || env.CLAUDE_HOME_DIR || path.join(os.homedir(), '.claude');
 env.APP_DATA_DIR = opts.dataDir || env.APP_DATA_DIR || path.join(os.homedir(), '.claude-control');
 if (opts.readOnly) env.READ_ONLY = 'true';
@@ -104,8 +105,8 @@ waitForHealth(port, browseHost).then((ready) => {
   process.stdout.write(
     `\n  Claude Control ${pkg.version}\n` +
       `  → ${url}\n` +
-      `  projects: ${env.PROJECTS_ROOTS}\n` +
-      `  global:   ${env.CLAUDE_HOME_DIR}\n` +
+      `  workspace: ${env.PROJECTS_ROOTS}\n` +
+      `  global:    ${env.CLAUDE_HOME_DIR}\n` +
       (env.READ_ONLY === 'true' ? '  mode:     read-only\n' : '') +
       '\n  Press Ctrl+C to stop.\n\n',
   );
