@@ -47,5 +47,10 @@ export default [
     files: ['**/*.config.{ts,js}', 'server/**/*.ts'],
     languageOptions: { globals: { ...globals.node } },
   },
+  {
+    // CommonJS scripts (the npx CLI wrapper).
+    files: ['**/*.cjs'],
+    languageOptions: { sourceType: 'commonjs', globals: { ...globals.node } },
+  },
   prettier,
 ];

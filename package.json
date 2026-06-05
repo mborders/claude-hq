@@ -1,9 +1,32 @@
 {
-  "name": "claude-control",
+  "name": "claude-ctl",
   "version": "0.1.0",
-  "private": true,
   "type": "module",
-  "description": "A sleek local web tool to manage global and project-level Claude Code configuration.",
+  "description": "A sleek local web UI to manage global and project-level Claude Code configuration — run it with npx.",
+  "keywords": [
+    "claude",
+    "claude-code",
+    "anthropic",
+    "config",
+    "configuration",
+    "cli",
+    "mcp",
+    "skills"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mborders/claude-control.git"
+  },
+  "homepage": "https://github.com/mborders/claude-control#readme",
+  "bin": {
+    "claude-ctl": "bin/claude-ctl.cjs"
+  },
+  "files": [
+    "bin/claude-ctl.cjs",
+    "server/dist/server.cjs",
+    "web/dist"
+  ],
   "engines": {
     "node": ">=20.11 <23"
   },
@@ -20,6 +43,7 @@
     "build:web": "npm run build -w @ccm/web",
     "build:server": "npm run build -w @ccm/server",
     "start": "node server/dist/server.cjs",
+    "prepublishOnly": "npm run build",
     "typecheck": "npm run typecheck -w @ccm/shared && npm run typecheck -w @ccm/server && npm run typecheck -w @ccm/web",
     "lint": "eslint . --max-warnings 0",
     "format": "prettier --write .",
@@ -33,6 +57,13 @@
   },
   "overrides": {
     "vite": "^6.0.7"
+  },
+  "dependencies": {
+    "@fastify/static": "^9.1.3",
+    "fastify": "^5.2.0",
+    "fflate": "^0.8.3",
+    "js-yaml": "^4.1.0",
+    "zod": "^3.24.1"
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^8.18.0",

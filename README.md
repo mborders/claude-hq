@@ -31,6 +31,37 @@ automatic backups, and validation before every write.
 
 ---
 
+## Run it instantly (npx)
+
+No clone, no Docker — just Node 20+:
+
+```bash
+npx claude-ctl
+```
+
+That starts the server and opens the UI in your browser. By default it scans the
+**current directory** for projects, reads your global config from `~/.claude`,
+and keeps its own config + backups in `~/.claude-control`. Everything is
+configurable:
+
+```bash
+npx claude-ctl --port 9000 --projects ~/code
+npx claude-ctl --claude-home ~/.claude --read-only
+npx claude-ctl --help
+```
+
+| Flag | Purpose | Default |
+|---|---|---|
+| `-p, --port <n>` | Port to listen on | `7878` |
+| `--host <addr>` | Interface to bind | `127.0.0.1` |
+| `--projects <paths>` | `:`-separated roots to scan | current directory |
+| `--claude-home <dir>` | Your global `~/.claude` | `~/.claude` |
+| `--data-dir <dir>` | Where to keep config + backups | `~/.claude-control` |
+| `--read-only` | Refuse all writes (view-only) | off |
+| `--no-open` | Don't open the browser | opens by default |
+
+---
+
 ## Quick start (Docker)
 
 Requirements: Docker + Docker Compose.
@@ -137,6 +168,21 @@ claude-control/
 | `APP_DATA_DIR` | `./.appdata` | Tool's own config + backups |
 | `READ_ONLY` | `false` | Refuse all writes when `true` |
 | `WEB_DIST_DIR` | `<cwd>/web/dist` | Built SPA location |
+
+---
+
+## Publishing (maintainers)
+
+The package ships the bundled server (`server/dist/server.cjs`) + built UI
+(`web/dist`) + the CLI, so consumers never build. `prepublishOnly` runs the
+build automatically.
+
+```bash
+npm login          # one-time
+npm publish        # builds, then publishes claude-ctl (public)
+```
+
+After that, anyone can `npx claude-ctl`.
 
 ---
 
