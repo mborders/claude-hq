@@ -40,6 +40,23 @@ describe('frontmatter', () => {
     expect(out).toContain('You are an agent.');
   });
 
+  it('degrades gracefully on unparseable frontmatter instead of throwing', () => {
+    // A real-world Claude-Code agent whose unquoted description contains colons
+    // (`Examples:`, `user:`) — invalid YAML that used to crash the whole list.
+    const bad =
+      '---\n' +
+      'name: react-native-ui-tester\n' +
+      "description: Use this agent for UI. Examples: <example>Context: x. user: 'do it' assistant: 'ok'</example>\n" +
+      'model: sonnet\n' +
+      '---\n' +
+      'You are an agent.\n';
+    const d = parseFrontmatter(bad); // must NOT throw
+    expect(d.hasFrontmatter).toBe(true);
+    expect(d.data).toEqual({}); // couldn't parse → empty data, not a crash
+    expect(d.parseError).toBeTruthy();
+    expect(d.body).toBe('You are an agent.\n'); // body preserved
+  });
+
   it('creates frontmatter for a brand-new doc', () => {
     const out = stringifyFrontmatter({
       data: { name: 'x', description: 'y' },

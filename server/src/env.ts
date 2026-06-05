@@ -15,6 +15,8 @@ export interface ServerEnv {
   /** When true, all write endpoints are refused (defense-in-depth). */
   readOnly: boolean;
   nodeEnv: string;
+  /** pino log level: 'trace'|'debug'|'info'|'warn'|'error'|'fatal'|'silent'. */
+  logLevel: string;
 }
 
 function expandHome(p: string): string {
@@ -46,6 +48,8 @@ export function loadEnv(env: NodeJS.ProcessEnv = process.env): ServerEnv {
     expandHome(env.WEB_DIST_DIR || path.join(process.cwd(), 'web', 'dist')),
   );
 
+  const nodeEnv = env.NODE_ENV || 'development';
+
   return {
     port: Number(env.PORT || 7878),
     host: env.HOST || '0.0.0.0',
@@ -54,6 +58,7 @@ export function loadEnv(env: NodeJS.ProcessEnv = process.env): ServerEnv {
     appDataDir,
     webDistDir,
     readOnly: toBool(env.READ_ONLY, false),
-    nodeEnv: env.NODE_ENV || 'development',
+    nodeEnv,
+    logLevel: env.LOG_LEVEL || (nodeEnv === 'development' ? 'info' : 'warn'),
   };
 }

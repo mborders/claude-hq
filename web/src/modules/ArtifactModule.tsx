@@ -186,8 +186,13 @@ function ArtifactEditor({ type, name, create }: { type: ArtifactType; name?: str
     setHasFm(env.raw.startsWith('---'));
     setBaseline(env.raw);
     setRawDraft(env.raw);
+    // Unparseable frontmatter: the form can't represent it, so open in raw mode
+    // (editing raw text preserves/fixes it) rather than risk clobbering on save.
+    if (env.parseError?.length) setMode('raw');
     setInitialized(true);
   }
+
+  const parseError = !create ? loaded.data?.parseError : undefined;
 
   const currentRaw = mode === 'raw' ? rawDraft : joinFrontmatter({ ...fm }, body, hasFm || Object.keys(fm).length > 0);
   const dirty = create ? currentRaw.trim().length > 0 || slug.trim().length > 0 : currentRaw !== baseline;
@@ -301,6 +306,15 @@ function ArtifactEditor({ type, name, create }: { type: ArtifactType; name?: str
         }
       >
         <div className="mx-auto max-w-3xl px-6 py-5">
+          {parseError?.length ? (
+            <div className="mb-4 flex items-start gap-2 rounded-md border border-warning/30 bg-warning-soft px-3 py-2 text-sm text-warning">
+              <FileText className="mt-0.5 h-4 w-4 shrink-0" />
+              <span>
+                This file’s frontmatter isn’t valid YAML ({parseError[0]?.message.split('\n')[0]}), so the form can’t
+                show it. Edit it as raw text below — often a `description:` with colons just needs quotes.
+              </span>
+            </div>
+          ) : null}
           {mode === 'raw' ? (
             <CodeMirror value={rawDraft} language="markdown" onChange={setRawDraft} diagnostics={issues} minHeight="420px" />
           ) : (

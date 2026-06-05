@@ -26,6 +26,7 @@ Options
       --data-dir <dir>    Where to keep config + backups     (default: ~/.claude-control)
       --read-only         Refuse all writes (view-only)
       --no-open           Don't open the browser automatically
+      --verbose           Print server logs (off by default)
   -h, --help              Show this help
   -v, --version           Show the version
 
@@ -50,6 +51,8 @@ function parseArgs(argv) {
       case '--read-only': opts.readOnly = true; break;
       case '--open': opts.open = true; break;
       case '--no-open': opts.open = false; break;
+      case '--verbose':
+      case '--debug': opts.verbose = true; break;
       case '-h':
       case '--help': opts.help = true; break;
       case '-v':
@@ -86,6 +89,8 @@ env.PROJECTS_ROOTS = opts.workspace || env.PROJECTS_ROOTS || process.cwd();
 env.CLAUDE_HOME_DIR = opts.claudeHome || env.CLAUDE_HOME_DIR || path.join(os.homedir(), '.claude');
 env.APP_DATA_DIR = opts.dataDir || env.APP_DATA_DIR || path.join(os.homedir(), '.claude-control');
 if (opts.readOnly) env.READ_ONLY = 'true';
+// Quiet by default — the banner is the UI. --verbose surfaces server logs.
+env.LOG_LEVEL = opts.verbose ? 'info' : env.LOG_LEVEL || 'silent';
 
 const serverBundle = path.join(PKG_ROOT, 'server', 'dist', 'server.cjs');
 if (!fs.existsSync(serverBundle) || !fs.existsSync(path.join(webDist, 'index.html'))) {

@@ -20,7 +20,7 @@ export async function buildApp(deps: AppDeps): Promise<FastifyInstance> {
   const { env } = deps;
 
   const app = Fastify({
-    logger: env.nodeEnv === 'test' ? false : { level: env.nodeEnv === 'development' ? 'info' : 'warn' },
+    logger: env.nodeEnv === 'test' || env.logLevel === 'silent' ? false : { level: env.logLevel },
     bodyLimit: 12 * 1024 * 1024, // 12 MB — CLAUDE.md can be large; .skill imports arrive base64-inlined
     trustProxy: true,
   });

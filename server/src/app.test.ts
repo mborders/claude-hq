@@ -483,3 +483,24 @@ describe('tree listing', () => {
     expect(paths).not.toContain('skills/flat/references/a.md'); // not recursed
   });
 });
+
+describe('malformed frontmatter resilience', () => {
+  it('lists agents without crashing when one has invalid YAML frontmatter, and flags it', async () => {
+    const dir = path.join(claudeHome, 'agents');
+    fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(path.join(dir, 'good.md'), '---\nname: good\ndescription: A fine agent.\n---\nbody\n');
+    // unquoted, colon-laden description — the real Claude-Code-generated shape
+    fs.writeFileSync(
+      path.join(dir, 'bad.md'),
+      "---\nname: bad\ndescription: Use this. Examples: <example>Context: x. user: 'do' assistant: 'ok'</example>\n---\nbody\n",
+    );
+
+    const list = await app.inject({ method: 'GET', url: '/api/scopes/global/agents' });
+    expect(list.statusCode).toBe(200); // one bad file does NOT 500 the whole list
+    expect(list.json().items.map((i: { name: string }) => i.name).sort()).toEqual(['bad', 'good']);
+
+    const got = await app.inject({ method: 'GET', url: '/api/scopes/global/agents/bad' });
+    expect(got.statusCode).toBe(200);
+    expect(got.json().parseError?.[0]?.path).toBe('frontmatter'); // flagged for the editor
+  });
+});

@@ -97,10 +97,14 @@ export class ArtifactService {
     const { meta, raw } = this.ctx.files.read(scope, rel);
     if (!meta.exists) throw new AppError('NOT_FOUND', `${type} not found: ${name}`);
     const fm = parseFrontmatter(raw);
+    // Surface unparseable frontmatter so the editor can warn + default to raw
+    // (and not silently clobber the original on a form save).
+    const parseError = fm.parseError ? [{ path: 'frontmatter', message: fm.parseError }] : undefined;
+    const extra = parseError ? { parseError } : {};
 
     if (type === 'agents') {
       const structured: Subagent = { frontmatter: fm.data as Subagent['frontmatter'], body: fm.body };
-      return { kind: 'subagent', meta, structured, raw };
+      return { kind: 'subagent', meta, structured, raw, ...extra };
     }
     if (type === 'skills') {
       const dirAbs = path.dirname(this.ctx.sandbox.resolve(scope.rootDir, rel));
@@ -112,14 +116,14 @@ export class ArtifactService {
         hasExamples: fs.existsSync(path.join(dirAbs, 'examples')),
         extraFiles: safeReaddir(dirAbs).filter((f) => f !== 'SKILL.md'),
       };
-      return { kind: 'skill', meta, structured, raw };
+      return { kind: 'skill', meta, structured, raw, ...extra };
     }
     const structured: SlashCommand = {
       frontmatter: fm.hasFrontmatter ? fm.data : null,
       body: fm.body,
       title: firstLine(fm.body) || name,
     };
-    return { kind: 'command', meta, structured, raw };
+    return { kind: 'command', meta, structured, raw, ...extra };
   }
 
   upsert(

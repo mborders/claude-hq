@@ -8,6 +8,8 @@ export interface FrontmatterDoc {
   rawHeader: string | null;
   /** Snapshot of `data` at parse time, to detect whether frontmatter changed. */
   originalData: Record<string, unknown>;
+  /** Set when the frontmatter block exists but is not valid YAML (data is then `{}`). */
+  parseError?: string;
 }
 
 const FM_RE = /^---[ \t]*\r?\n([\s\S]*?)\r?\n---[ \t]*\r?\n?/;
@@ -23,14 +25,32 @@ export function parseFrontmatter(raw: string): FrontmatterDoc {
   if (!m) {
     return { data: {}, body: text, hasFrontmatter: false, rawHeader: null, originalData: {} };
   }
+  const body = text.slice(m[0].length);
+
   // JSON_SCHEMA: no custom tags (no code-exec), and predictable scalar typing
   // (avoids YAML-1.1 quirks like `no` -> false in a description). Frontmatter is
   // further validated by zod schemas at the route layer.
-  const loaded = yaml.load(m[1]!, { schema: yaml.JSON_SCHEMA }) as unknown;
+  let loaded: unknown;
+  try {
+    loaded = yaml.load(m[1]!, { schema: yaml.JSON_SCHEMA });
+  } catch (err) {
+    // Malformed YAML — e.g. a Claude-generated agent whose unquoted description
+    // contains colons (`Examples:`, `user:`). Degrade gracefully (empty data +
+    // the body, flagged) instead of throwing and breaking the entire list.
+    return {
+      data: {},
+      body,
+      hasFrontmatter: true,
+      rawHeader: m[0],
+      originalData: {},
+      parseError: err instanceof Error ? err.message : 'Invalid YAML frontmatter',
+    };
+  }
+
   const data = isPlainObject(loaded) ? loaded : {};
   return {
     data,
-    body: text.slice(m[0].length),
+    body,
     hasFrontmatter: true,
     rawHeader: m[0],
     originalData: structuredClone(data),

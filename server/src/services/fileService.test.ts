@@ -23,6 +23,7 @@ function makeEnv(overrides: Partial<ServerEnv> = {}): ServerEnv {
     webDistDir: path.join(appData, 'web'),
     readOnly: false,
     nodeEnv: 'test',
+    logLevel: 'silent',
     ...overrides,
   };
 }
