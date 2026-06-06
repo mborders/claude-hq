@@ -9,7 +9,7 @@ import type {
   Skill,
   WriteResult,
   ValidateKind,
-} from '@ccm/shared';
+} from '@claude-hq/shared';
 import {
   parseFrontmatter,
   stringifyFrontmatter,

@@ -1,5 +1,5 @@
 import path from 'node:path';
-import type { AppConfig } from '@ccm/shared';
+import type { AppConfig } from '@claude-hq/shared';
 import { readText, writeAtomic } from '../fs/safeFs';
 import { appConfigSchema } from '../schemas';
 import type { ServerEnv } from '../env';

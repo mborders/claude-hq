@@ -14,7 +14,7 @@ export const useTheme = create<ThemeState>()(
       theme: 'system',
       setTheme: (theme) => set({ theme }),
     }),
-    { name: 'ccm-theme' },
+    { name: 'claude-hq-theme' },
   ),
 );
 

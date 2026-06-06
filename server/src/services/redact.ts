@@ -1,4 +1,4 @@
-import type { KnownSettings } from '@ccm/shared';
+import type { KnownSettings } from '@claude-hq/shared';
 
 export const SECRET_MASK = '••••••• (hidden)';
 

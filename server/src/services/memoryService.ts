@@ -6,7 +6,7 @@ import type {
   MemoryKind,
   MemoryListItem,
   WriteResult,
-} from '@ccm/shared';
+} from '@claude-hq/shared';
 import { parseFrontmatter, stringifyFrontmatter } from '../fs/frontmatter';
 import { type ResolvedScope } from '../domain/paths';
 import { AppError } from '../http/appError';

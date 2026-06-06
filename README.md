@@ -1,4 +1,4 @@
-# Claude Control
+# Claude HQ
 
 A sleek, local web tool for managing your **Claude Code** configuration — both the
 global user config (`~/.claude/`) and per-project config (`<project>/.claude/`) —
@@ -36,18 +36,18 @@ automatic backups, and validation before every write.
 No clone, no Docker — just Node 20+:
 
 ```bash
-npx claude-ctl
+npx claude-hq
 ```
 
 That starts the server and opens the UI in your browser. By default it scans the
 **current directory** for projects, reads your global config from `~/.claude`,
-and keeps its own config + backups in `~/.claude-control`. Everything is
+and keeps its own config + backups in `~/.claude-hq`. Everything is
 configurable:
 
 ```bash
-npx claude-ctl --port 9000 --workspace ~/code
-npx claude-ctl --claude-home ~/.claude --read-only
-npx claude-ctl --help
+npx claude-hq --port 9000 --workspace ~/code
+npx claude-hq --claude-home ~/.claude --read-only
+npx claude-hq --help
 ```
 
 | Flag | Purpose | Default |
@@ -56,7 +56,7 @@ npx claude-ctl --help
 | `--host <addr>` | Interface to bind | `127.0.0.1` |
 | `-w, --workspace <dir>` | Folder that holds your projects | current directory |
 | `--claude-home <dir>` | Your global `~/.claude` | `~/.claude` |
-| `--data-dir <dir>` | Where to keep config + backups | `~/.claude-control` |
+| `--data-dir <dir>` | Where to keep config + backups | `~/.claude-hq` |
 | `--read-only` | Refuse all writes (view-only) | off |
 | `--no-open` | Don't open the browser | opens by default |
 
@@ -67,7 +67,7 @@ npx claude-ctl --help
 Requirements: Docker + Docker Compose.
 
 ```bash
-git clone <this-repo> && cd claude-control
+git clone <this-repo> && cd claude-hq
 
 # One-time: seed your host UID/GID into .env (so files stay owned by you) and
 # create the app-data directory. (make setup does this for you.)
@@ -126,10 +126,10 @@ npm run build      # production build (web/dist + server/dist/server.cjs)
 ## How it works
 
 ```
-claude-control/
-├── shared/   @ccm/shared — TypeScript wire contract (types + permission helpers)
-├── server/   @ccm/server — Fastify API + static SPA host (bundled to one .cjs)
-└── web/      @ccm/web    — React + Vite SPA
+claude-hq/
+├── shared/   @claude-hq/shared — TypeScript wire contract (types + permission helpers)
+├── server/   @claude-hq/server — Fastify API + static SPA host (bundled to one .cjs)
+└── web/      @claude-hq/web    — React + Vite SPA
 ```
 
 - **Single port, single process.** In production the Fastify server serves the
@@ -179,10 +179,10 @@ build automatically.
 
 ```bash
 npm login          # one-time
-npm publish        # builds, then publishes claude-ctl (public)
+npm publish        # builds, then publishes claude-hq (public)
 ```
 
-After that, anyone can `npx claude-ctl`.
+After that, anyone can `npx claude-hq`.
 
 ---
 

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import { Plus, X, Webhook } from 'lucide-react';
-import type { HookRow } from '@ccm/shared';
+import type { HookRow } from '@claude-hq/shared';
 import { useHooks, useWriteHooks } from '../lib/queries';
 import { ApiClientError } from '../lib/api';
 import { Button, Input, Spinner, EmptyState } from '../components/ui';

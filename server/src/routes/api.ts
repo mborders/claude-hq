@@ -9,7 +9,7 @@ import type {
   RuntimeSummary,
   TreeEntry,
   SkillImportRequest,
-} from '@ccm/shared';
+} from '@claude-hq/shared';
 import type { AppContext } from '../context';
 import type { ResolvedScope } from '../domain/paths';
 import { createServices } from '../services';

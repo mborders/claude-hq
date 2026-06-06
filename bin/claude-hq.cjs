@@ -13,17 +13,17 @@ const PKG_ROOT = path.join(__dirname, '..');
 const pkg = require(path.join(PKG_ROOT, 'package.json'));
 
 const HELP = `
-Claude Control ${pkg.version} — a local web UI to manage Claude Code configuration.
+Claude HQ ${pkg.version} — a local web UI to manage Claude Code configuration.
 
 Usage
-  npx claude-ctl [options]
+  npx claude-hq [options]
 
 Options
   -p, --port <n>          Port to listen on                  (default 7878)
       --host <addr>       Interface to bind                  (default 127.0.0.1)
   -w, --workspace <dir>   Folder that holds your projects    (default: current directory)
       --claude-home <dir> Your global ~/.claude directory    (default: ~/.claude)
-      --data-dir <dir>    Where to keep config + backups     (default: ~/.claude-control)
+      --data-dir <dir>    Where to keep config + backups     (default: ~/.claude-hq)
       --read-only         Refuse all writes (view-only)
       --no-open           Don't open the browser automatically
       --verbose           Print server logs (off by default)
@@ -31,9 +31,9 @@ Options
   -v, --version           Show the version
 
 Examples
-  npx claude-ctl
-  npx claude-ctl --port 9000 --workspace ~/code
-  npx claude-ctl --claude-home ~/.claude --read-only
+  npx claude-hq
+  npx claude-hq --port 9000 --workspace ~/code
+  npx claude-hq --claude-home ~/.claude --read-only
 `;
 
 function parseArgs(argv) {
@@ -58,7 +58,7 @@ function parseArgs(argv) {
       case '-v':
       case '--version': opts.version = true; break;
       default:
-        process.stderr.write(`Unknown option: ${a}\nRun "claude-ctl --help" for usage.\n`);
+        process.stderr.write(`Unknown option: ${a}\nRun "claude-hq --help" for usage.\n`);
         process.exit(1);
     }
   }
@@ -87,7 +87,7 @@ env.PORT = String(port);
 env.WEB_DIST_DIR = webDist;
 env.PROJECTS_ROOTS = opts.workspace || env.PROJECTS_ROOTS || process.cwd();
 env.CLAUDE_HOME_DIR = opts.claudeHome || env.CLAUDE_HOME_DIR || path.join(os.homedir(), '.claude');
-env.APP_DATA_DIR = opts.dataDir || env.APP_DATA_DIR || path.join(os.homedir(), '.claude-control');
+env.APP_DATA_DIR = opts.dataDir || env.APP_DATA_DIR || path.join(os.homedir(), '.claude-hq');
 if (opts.readOnly) env.READ_ONLY = 'true';
 // Quiet by default — the banner is the UI. --verbose surfaces server logs.
 env.LOG_LEVEL = opts.verbose ? 'info' : env.LOG_LEVEL || 'silent';
@@ -108,7 +108,7 @@ require(serverBundle);
 
 waitForHealth(port, browseHost).then((ready) => {
   process.stdout.write(
-    `\n  Claude Control ${pkg.version}\n` +
+    `\n  Claude HQ ${pkg.version}\n` +
       `  → ${url}\n` +
       `  workspace: ${env.PROJECTS_ROOTS}\n` +
       `  global:    ${env.CLAUDE_HOME_DIR}\n` +

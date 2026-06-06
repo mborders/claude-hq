@@ -1,4 +1,4 @@
-import type { FileMeta, WriteResult, BackupRef } from '@ccm/shared';
+import type { FileMeta, WriteResult, BackupRef } from '@claude-hq/shared';
 import { PathSandbox } from '../fs/sandbox';
 import { BackupStore } from '../fs/backup';
 import { isRuntimeReadonlyRelPath } from '../fs/readonly';

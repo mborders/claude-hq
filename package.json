@@ -1,5 +1,5 @@
 {
-  "name": "claude-ctl",
+  "name": "claude-hq",
   "version": "0.1.0",
   "type": "module",
   "description": "A sleek local web UI to manage global and project-level Claude Code configuration — run it with npx.",
@@ -16,14 +16,14 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/mborders/claude-control.git"
+    "url": "git+https://github.com/mborders/claude-hq.git"
   },
-  "homepage": "https://github.com/mborders/claude-control#readme",
+  "homepage": "https://github.com/mborders/claude-hq#readme",
   "bin": {
-    "claude-ctl": "bin/claude-ctl.cjs"
+    "claude-hq": "bin/claude-hq.cjs"
   },
   "files": [
-    "bin/claude-ctl.cjs",
+    "bin/claude-hq.cjs",
     "server/dist/server.cjs",
     "web/dist"
   ],
@@ -37,14 +37,14 @@
   ],
   "scripts": {
     "dev": "concurrently -k -n web,api -c blue,magenta \"npm:dev:web\" \"npm:dev:server\"",
-    "dev:web": "npm run dev -w @ccm/web",
-    "dev:server": "npm run dev -w @ccm/server",
+    "dev:web": "npm run dev -w @claude-hq/web",
+    "dev:server": "npm run dev -w @claude-hq/server",
     "build": "npm run build:web && npm run build:server",
-    "build:web": "npm run build -w @ccm/web",
-    "build:server": "npm run build -w @ccm/server",
+    "build:web": "npm run build -w @claude-hq/web",
+    "build:server": "npm run build -w @claude-hq/server",
     "start": "node server/dist/server.cjs",
     "prepublishOnly": "npm run build",
-    "typecheck": "npm run typecheck -w @ccm/shared && npm run typecheck -w @ccm/server && npm run typecheck -w @ccm/web",
+    "typecheck": "npm run typecheck -w @claude-hq/shared && npm run typecheck -w @claude-hq/server && npm run typecheck -w @claude-hq/web",
     "lint": "eslint . --max-warnings 0",
     "format": "prettier --write .",
     "format:check": "prettier --check .",

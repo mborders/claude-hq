@@ -8,7 +8,7 @@ import { writeAtomic, readText, statFile, removeFile, sha256Hex } from './safeFs
 let dir: string;
 
 beforeEach(() => {
-  dir = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'ccm-safefs-')));
+  dir = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'claude-hq-safefs-')));
 });
 afterEach(() => {
   fs.rmSync(dir, { recursive: true, force: true });
@@ -47,7 +47,7 @@ describe('safeFs', () => {
   it('leaves no temp files behind after a write', () => {
     const p = path.join(dir, 'x.json');
     writeAtomic(p, '{}');
-    const leftovers = fs.readdirSync(dir).filter((f) => f.includes('ccm-tmp'));
+    const leftovers = fs.readdirSync(dir).filter((f) => f.includes('claude-hq-tmp'));
     expect(leftovers).toEqual([]);
   });
 

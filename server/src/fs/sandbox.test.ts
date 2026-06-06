@@ -9,8 +9,8 @@ let outside: string;
 
 beforeEach(() => {
   // realpathSync so macOS /var -> /private/var symlinking doesn't confuse asserts.
-  root = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'ccm-root-')));
-  outside = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'ccm-out-')));
+  root = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'claude-hq-root-')));
+  outside = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'claude-hq-out-')));
   fs.writeFileSync(path.join(outside, 'secret.txt'), 'TOP SECRET');
 });
 

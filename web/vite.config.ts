@@ -11,7 +11,7 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),
-      '@ccm/shared': fileURLToPath(new URL('../shared/src/index.ts', import.meta.url)),
+      '@claude-hq/shared': fileURLToPath(new URL('../shared/src/index.ts', import.meta.url)),
     },
     dedupe: ['react', 'react-dom'],
   },

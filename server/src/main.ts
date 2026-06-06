@@ -11,7 +11,7 @@ async function main(): Promise<void> {
   // Warn early (not fatal) if the global config mount looks wrong.
   if (!fs.existsSync(env.claudeHomeDir)) {
     console.warn(
-      `[ccm] CLAUDE_HOME_DIR does not exist: ${env.claudeHomeDir}\n` +
+      `[claude-hq] CLAUDE_HOME_DIR does not exist: ${env.claudeHomeDir}\n` +
         `      The global scope will appear empty until this path is mounted/created.`,
     );
   }
@@ -22,7 +22,7 @@ async function main(): Promise<void> {
     await app.listen({ port: env.port, host: env.host });
     app.log.info(
       { claudeHome: env.claudeHomeDir, projectsRoots: env.projectsRoots, readOnly: env.readOnly },
-      `Claude Control listening on http://${env.host}:${env.port}`,
+      `Claude HQ listening on http://${env.host}:${env.port}`,
     );
   } catch (err) {
     // Friendly startup errors — visible even when the logger is silent (npx CLI).

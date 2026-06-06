@@ -8,8 +8,8 @@ let appData: string;
 let scopeRoot: string;
 
 beforeEach(() => {
-  appData = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'ccm-appdata-')));
-  scopeRoot = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'ccm-scope-')));
+  appData = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'claude-hq-appdata-')));
+  scopeRoot = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'claude-hq-scope-')));
 });
 afterEach(() => {
   fs.rmSync(appData, { recursive: true, force: true });

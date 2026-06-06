@@ -3,13 +3,13 @@ import { useParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import * as Popover from '@radix-ui/react-popover';
 import { Plus, X, ShieldCheck, ShieldX, Search, FolderPlus } from 'lucide-react';
-import type { PermissionsBlock } from '@ccm/shared';
+import type { PermissionsBlock } from '@claude-hq/shared';
 import {
   KNOWN_PERMISSION_TOOLS,
   formatPermissionRule,
   groupRulesByTool,
   isBroadRule,
-} from '@ccm/shared';
+} from '@claude-hq/shared';
 import { usePermissions, useWritePermissions } from '../lib/queries';
 import { ApiClientError } from '../lib/api';
 import { Button, Input, Spinner, Badge } from '../components/ui';

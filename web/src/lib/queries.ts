@@ -31,7 +31,7 @@ import type {
   SkillImportResult,
   TreeResponse,
   FileMeta,
-} from '@ccm/shared';
+} from '@claude-hq/shared';
 import { api, qk, scopeUrl } from './api';
 
 const enc = encodeURIComponent;

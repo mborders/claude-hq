@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import type { Scope, ProjectRef, ScopesResponse } from '@ccm/shared';
+import type { Scope, ProjectRef, ScopesResponse } from '@claude-hq/shared';
 import { GLOBAL_SCOPE_ID, encodeProjectScopeId } from '../domain/scopeId';
 import { resolveScope, type ResolvedScope } from '../domain/paths';
 import { AppError } from '../http/appError';

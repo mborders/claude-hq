@@ -1,5 +1,5 @@
 import type { FastifyPluginAsync } from 'fastify';
-import { APP_VERSION } from '@ccm/shared';
+import { APP_VERSION } from '@claude-hq/shared';
 import type { ServerEnv } from '../env';
 
 /** GET /api/health — used by the Docker healthcheck and the UI ownership warning. */

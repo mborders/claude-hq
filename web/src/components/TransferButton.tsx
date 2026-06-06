@@ -2,7 +2,7 @@ import { useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { ArrowRightLeft, Globe, FolderGit2, Loader2, Search } from 'lucide-react';
-import type { TransferType, TransferMode, HookRow } from '@ccm/shared';
+import type { TransferType, TransferMode, HookRow } from '@claude-hq/shared';
 import { useScopes, useTransfer } from '../lib/queries';
 import { ApiClientError } from '../lib/api';
 import { Modal, ConfirmDialog } from './Dialog';

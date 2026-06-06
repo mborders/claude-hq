@@ -9,8 +9,8 @@ import type {
   HooksBlock,
   HookRow,
   WriteResult,
-} from '@ccm/shared';
-import { isBroadRule } from '@ccm/shared';
+} from '@claude-hq/shared';
+import { isBroadRule } from '@claude-hq/shared';
 import { parseJsonFile, serializeJsonObject, type JsonFileModel } from '../fs/jsonFile';
 import { readText } from '../fs/safeFs';
 import { configRel, type ResolvedScope } from '../domain/paths';

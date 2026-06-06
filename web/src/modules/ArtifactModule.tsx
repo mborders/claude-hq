@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import { Bot, SquareSlash, Sparkles, Plus, Trash2, ChevronRight, FileText, CheckSquare, Upload } from 'lucide-react';
-import type { ArtifactType, Subagent, SlashCommand, Skill } from '@ccm/shared';
+import type { ArtifactType, Subagent, SlashCommand, Skill } from '@claude-hq/shared';
 import { useArtifact, useArtifacts, useDeleteArtifact, useUpsertArtifact } from '../lib/queries';
 import { ApiClientError } from '../lib/api';
 import { splitFrontmatter, joinFrontmatter } from '../lib/frontmatter';

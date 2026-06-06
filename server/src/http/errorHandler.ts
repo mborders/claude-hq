@@ -1,5 +1,5 @@
 import type { FastifyInstance } from 'fastify';
-import type { ApiError } from '@ccm/shared';
+import type { ApiError } from '@claude-hq/shared';
 import { isAppError } from './appError';
 
 /** Map thrown errors to the uniform ApiError body + status code. */

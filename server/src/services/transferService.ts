@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import type { TransferRequest, TransferResult, McpServer, HookRow } from '@ccm/shared';
+import type { TransferRequest, TransferResult, McpServer, HookRow } from '@claude-hq/shared';
 import { configRel, type ResolvedScope } from '../domain/paths';
 import { lstatSafe, removeDirSafe } from '../fs/safeFs';
 import { AppError } from '../http/appError';

@@ -35,9 +35,9 @@ function seed() {
 }
 
 beforeEach(async () => {
-  claudeHome = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'ccm-home-')));
-  projectsRoot = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'ccm-proj-')));
-  appData = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'ccm-data-')));
+  claudeHome = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'claude-hq-home-')));
+  projectsRoot = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'claude-hq-proj-')));
+  appData = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'claude-hq-data-')));
   seed();
   const env = loadEnv({
     NODE_ENV: 'test',

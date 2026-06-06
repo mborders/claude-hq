@@ -69,7 +69,7 @@ export function writeAtomic(
     /* new file — keep opts.mode ?? default */
   }
 
-  const tmp = path.join(dir, `.${path.basename(absPath)}.ccm-tmp-${process.pid}-${tmpCounter++}`);
+  const tmp = path.join(dir, `.${path.basename(absPath)}.claude-hq-tmp-${process.pid}-${tmpCounter++}`);
   try {
     const fd = fs.openSync(tmp, 'w', mode);
     try {

@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { ValidationIssue, ValidateKind } from '@ccm/shared';
+import type { ValidationIssue, ValidateKind } from '@claude-hq/shared';
 
 const ruleArray = z.array(z.string());
 

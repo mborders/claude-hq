@@ -5,7 +5,7 @@ import type {
   McpRegistrySearchResponse,
   PluginRegistryEntry,
   PluginRegistrySearchResponse,
-} from '@ccm/shared';
+} from '@claude-hq/shared';
 import { readText } from '../fs/safeFs';
 import type { AppContext } from '../context';
 
@@ -47,7 +47,7 @@ async function fetchJson(url: string, timeoutMs = 8000): Promise<unknown> {
   try {
     const res = await fetch(url, {
       signal: ctrl.signal,
-      headers: { accept: 'application/json', 'user-agent': 'claude-control' },
+      headers: { accept: 'application/json', 'user-agent': 'claude-hq' },
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     return await res.json();

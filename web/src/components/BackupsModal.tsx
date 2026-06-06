@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { RotateCcw, Clock } from 'lucide-react';
-import type { BackupRef } from '@ccm/shared';
+import type { BackupRef } from '@claude-hq/shared';
 import { useBackups, useBackupPreview, useRestoreBackup } from '../lib/queries';
 import { ApiClientError } from '../lib/api';
 import { Modal, ConfirmDialog } from './Dialog';

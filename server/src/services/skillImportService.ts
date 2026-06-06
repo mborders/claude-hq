@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { unzipSync } from 'fflate';
-import type { SkillImportPreview, SkillImportResult } from '@ccm/shared';
+import type { SkillImportPreview, SkillImportResult } from '@claude-hq/shared';
 import { parseFrontmatter } from '../fs/frontmatter';
 import { removeDirSafe, lstatSafe } from '../fs/safeFs';
 import { configRel, type ResolvedScope } from '../domain/paths';

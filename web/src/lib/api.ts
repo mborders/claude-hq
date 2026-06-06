@@ -1,4 +1,4 @@
-import type { ApiError, ValidationIssue } from '@ccm/shared';
+import type { ApiError, ValidationIssue } from '@claude-hq/shared';
 
 /** Error thrown for any non-2xx API response, carrying the structured ApiError. */
 export class ApiClientError extends Error {

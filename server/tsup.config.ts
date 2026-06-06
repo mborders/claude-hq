@@ -1,7 +1,7 @@
 import { defineConfig } from 'tsup';
 
 // Bundle the server to a single CJS file so the runtime stage only needs
-// production node_modules + this artifact. @ccm/shared is workspace TS source,
+// production node_modules + this artifact. @claude-hq/shared is workspace TS source,
 // so it must be bundled in (noExternal); everything else stays external and is
 // resolved from node_modules at runtime.
 export default defineConfig({
@@ -13,7 +13,7 @@ export default defineConfig({
   clean: true,
   sourcemap: true,
   minify: false,
-  noExternal: [/@ccm\//],
+  noExternal: [/@claude-hq\//],
   outExtension() {
     return { js: '.cjs' };
   },

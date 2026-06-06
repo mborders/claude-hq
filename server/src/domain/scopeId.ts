@@ -1,5 +1,5 @@
 import path from 'node:path';
-import type { ScopeId } from '@ccm/shared';
+import type { ScopeId } from '@claude-hq/shared';
 
 export const GLOBAL_SCOPE_ID: ScopeId = 'global';
 

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import { Plus, Trash2, Plug, Pencil, Eye, EyeOff, Sparkles, Search, ArrowDownToLine, CheckSquare } from 'lucide-react';
-import type { McpServer, McpRegistryEntry, McpInstall } from '@ccm/shared';
+import type { McpServer, McpRegistryEntry, McpInstall } from '@claude-hq/shared';
 import { useMcp, useUpsertMcp, useDeleteMcp, useMcpRegistrySearch } from '../lib/queries';
 import { useDebounce } from '../hooks/useDebounce';
 import { ApiClientError } from '../lib/api';

@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Globe, Plus, Search, FolderGit2 } from 'lucide-react';
-import type { ProjectRef } from '@ccm/shared';
+import type { ProjectRef } from '@claude-hq/shared';
 import { useScopes, useAddProject } from '../lib/queries';
 import { useUi } from '../lib/stores';
 import { cn } from '../lib/cn';
@@ -34,10 +34,10 @@ export function ScopeSidebar() {
     <aside className="flex h-full w-60 shrink-0 flex-col border-r border-border bg-bg-subtle">
       <div className="flex items-center gap-2 px-4 pb-2 pt-4">
         <div className="flex h-7 w-7 items-center justify-center rounded-md bg-clay text-white shadow-sm">
-          <span className="font-display text-sm font-semibold">C</span>
+          <span className="font-display text-xs font-semibold tracking-tight">HQ</span>
         </div>
         <div className="leading-tight">
-          <div className="font-display text-[15px] font-semibold text-ink">Claude Control</div>
+          <div className="font-display text-[15px] font-semibold text-ink">Claude HQ</div>
           <div className="text-[11px] text-ink-subtle">manager</div>
         </div>
       </div>

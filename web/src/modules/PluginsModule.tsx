@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import { Plus, Trash2, Store, Blocks, Github, Sparkles, Search, Check, ArrowDownToLine, Pencil, Lock } from 'lucide-react';
-import type { Plugin, PluginRegistryEntry, Marketplace } from '@ccm/shared';
+import type { Plugin, PluginRegistryEntry, Marketplace } from '@claude-hq/shared';
 import {
   usePlugins,
   useTogglePlugin,

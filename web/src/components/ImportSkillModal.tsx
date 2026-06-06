@@ -2,7 +2,7 @@ import { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { Upload, FileArchive, AlertTriangle, FileText } from 'lucide-react';
-import type { SkillImportPreview, SkillImportResult } from '@ccm/shared';
+import type { SkillImportPreview, SkillImportResult } from '@claude-hq/shared';
 import { useImportSkill } from '../lib/queries';
 import { ApiClientError } from '../lib/api';
 import { Modal } from './Dialog';

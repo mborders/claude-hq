@@ -38,9 +38,9 @@ let claudeHome: string, projectsRoot: string, appData: string;
 let ctx: AppContext, scope: ResolvedScope, svc: SkillImportService;
 
 beforeEach(() => {
-  claudeHome = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'ccm-imp-home-')));
-  projectsRoot = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'ccm-imp-proj-')));
-  appData = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'ccm-imp-data-')));
+  claudeHome = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'claude-hq-imp-home-')));
+  projectsRoot = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'claude-hq-imp-proj-')));
+  appData = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'claude-hq-imp-data-')));
   const env = loadEnv({
     NODE_ENV: 'test',
     CLAUDE_HOME_DIR: claudeHome,

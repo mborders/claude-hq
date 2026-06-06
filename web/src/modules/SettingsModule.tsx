@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { toast } from 'sonner';
-import type { KnownSettings, SettingsFile } from '@ccm/shared';
+import type { KnownSettings, SettingsFile } from '@claude-hq/shared';
 import { useSettings, useWriteSettings } from '../lib/queries';
 import { ApiClientError } from '../lib/api';
 import { Field, Input, Switch, Spinner } from '../components/ui';

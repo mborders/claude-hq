@@ -1,4 +1,4 @@
-import type { ApiErrorCode, ValidationIssue } from '@ccm/shared';
+import type { ApiErrorCode, ValidationIssue } from '@claude-hq/shared';
 
 const STATUS_BY_CODE: Record<ApiErrorCode, number> = {
   NOT_FOUND: 404,

@@ -1,4 +1,4 @@
-import type { McpServer, McpListResponse, WriteResult } from '@ccm/shared';
+import type { McpServer, McpListResponse, WriteResult } from '@claude-hq/shared';
 import { parseJsonFile, serializeJsonObject, type JsonFileModel } from '../fs/jsonFile';
 import { type ResolvedScope } from '../domain/paths';
 import { validate } from '../schemas';

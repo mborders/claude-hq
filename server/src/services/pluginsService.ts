@@ -5,7 +5,7 @@ import type {
   Marketplace,
   BlocklistEntry,
   PluginInstallEntry,
-} from '@ccm/shared';
+} from '@claude-hq/shared';
 import { readText } from '../fs/safeFs';
 import { resolveScope, type ResolvedScope } from '../domain/paths';
 import { GLOBAL_SCOPE_ID } from '../domain/scopeId';

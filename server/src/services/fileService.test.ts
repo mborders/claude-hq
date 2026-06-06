@@ -34,9 +34,9 @@ function makeService(env: ServerEnv) {
 }
 
 beforeEach(() => {
-  claudeHome = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'ccm-home-')));
-  projectsRoot = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'ccm-proj-')));
-  appData = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'ccm-data-')));
+  claudeHome = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'claude-hq-home-')));
+  projectsRoot = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'claude-hq-proj-')));
+  appData = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'claude-hq-data-')));
 });
 afterEach(() => {
   for (const d of [claudeHome, projectsRoot, appData]) fs.rmSync(d, { recursive: true, force: true });

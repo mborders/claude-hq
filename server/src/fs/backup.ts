@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import type { BackupRef } from '@ccm/shared';
+import type { BackupRef } from '@claude-hq/shared';
 
 function sanitizeScope(scopeId: string): string {
   // base64url has no path separators; ':' is replaced to be cross-fs safe.
