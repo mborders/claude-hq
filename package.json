@@ -1,5 +1,5 @@
 {
-  "name": "claude-hq",
+  "name": "@matthewbborders/claude-hq",
   "version": "0.1.0",
   "type": "module",
   "description": "A sleek local web UI to manage global and project-level Claude Code configuration — run it with npx.",
@@ -19,6 +19,9 @@
     "url": "git+https://github.com/mborders/claude-hq.git"
   },
   "homepage": "https://github.com/mborders/claude-hq#readme",
+  "publishConfig": {
+    "access": "public"
+  },
   "bin": {
     "claude-hq": "bin/claude-hq.cjs"
   },

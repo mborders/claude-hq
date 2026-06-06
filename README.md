@@ -36,7 +36,7 @@ automatic backups, and validation before every write.
 No clone, no Docker — just Node 20+:
 
 ```bash
-npx claude-hq
+npx @matthewbborders/claude-hq
 ```
 
 That starts the server and opens the UI in your browser. By default it scans the
@@ -45,9 +45,9 @@ and keeps its own config + backups in `~/.claude-hq`. Everything is
 configurable:
 
 ```bash
-npx claude-hq --port 9000 --workspace ~/code
-npx claude-hq --claude-home ~/.claude --read-only
-npx claude-hq --help
+npx @matthewbborders/claude-hq --port 9000 --workspace ~/code
+npx @matthewbborders/claude-hq --claude-home ~/.claude --read-only
+npx @matthewbborders/claude-hq --help
 ```
 
 | Flag | Purpose | Default |
@@ -179,10 +179,10 @@ build automatically.
 
 ```bash
 npm login          # one-time
-npm publish        # builds, then publishes claude-hq (public)
+npm publish        # builds, then publishes @matthewbborders/claude-hq (public)
 ```
 
-After that, anyone can `npx claude-hq`.
+After that, anyone can `npx @matthewbborders/claude-hq`.
 
 ---
 

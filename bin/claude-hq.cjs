@@ -16,7 +16,7 @@ const HELP = `
 Claude HQ ${pkg.version} — a local web UI to manage Claude Code configuration.
 
 Usage
-  npx claude-hq [options]
+  npx @matthewbborders/claude-hq [options]
 
 Options
   -p, --port <n>          Port to listen on                  (default 7878)
@@ -31,9 +31,9 @@ Options
   -v, --version           Show the version
 
 Examples
-  npx claude-hq
-  npx claude-hq --port 9000 --workspace ~/code
-  npx claude-hq --claude-home ~/.claude --read-only
+  npx @matthewbborders/claude-hq
+  npx @matthewbborders/claude-hq --port 9000 --workspace ~/code
+  npx @matthewbborders/claude-hq --claude-home ~/.claude --read-only
 `;
 
 function parseArgs(argv) {
