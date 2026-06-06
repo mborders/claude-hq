@@ -23,6 +23,12 @@ export async function buildApp(deps: AppDeps): Promise<FastifyInstance> {
     logger: env.nodeEnv === 'test' || env.logLevel === 'silent' ? false : { level: env.logLevel },
     bodyLimit: 12 * 1024 * 1024, // 12 MB — CLAUDE.md can be large; .skill imports arrive base64-inlined
     trustProxy: true,
+    // Project scope ids are `project:<base64url(absolute path)>` and embed in the
+    // URL as the :scopeId route param. find-my-way's default maxParamLength of 100
+    // makes the router silently 404 any real project path (base64url of a deep or
+    // /private/var temp path easily exceeds it). Allow enough for PATH_MAX (4096
+    // bytes -> ~5460 base64url chars) plus the prefix.
+    maxParamLength: 8192,
   });
 
   if (env.nodeEnv === 'development') {
